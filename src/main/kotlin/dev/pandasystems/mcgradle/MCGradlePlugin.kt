@@ -1,9 +1,12 @@
 package dev.pandasystems.mcgradle
 
+import com.google.gson.GsonBuilder
 import dev.pandasystems.mcgradle.tasks.AddMinecraftDependenciesTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+
+val GSON = GsonBuilder().setPrettyPrinting().create()
 
 class MCGradlePlugin : Plugin<Project> {
 	override fun apply(target: Project) {
@@ -36,9 +39,13 @@ class MCGradlePlugin : Plugin<Project> {
 			it.isCanBeConsumed = false
 			it.isCanBeResolved = true
 		}
+		val mapping = target.configurations.create("mapping") {
+			it.isCanBeConsumed = false
+			it.isCanBeResolved = true
+		}
 
 		// Register the AddMinecraftDependenciesTask
 		target.tasks.register("addMinecraftDependencies", AddMinecraftDependenciesTask::class.java)
-		target.tasks.getByName("prepareKotlinBuildScriptModel") {}
+		target.tasks.getByName("prepareKotlinBuildScriptModel") {it.dependsOn("addMinecraftDependencies")}
 	}
 }
