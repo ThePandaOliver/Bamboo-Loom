@@ -1,5 +1,4 @@
 plugins {
-    id("java")
 	`java-gradle-plugin`
 	`maven-publish`
 	kotlin("jvm")
@@ -13,16 +12,8 @@ repositories {
 }
 
 dependencies {
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-	gradleApi()
-
 	implementation("com.google.code.gson:gson:2.12.1")
 	implementation(kotlin("stdlib-jdk8"))
-}
-
-tasks.test {
-    useJUnitPlatform()
 }
 
 gradlePlugin {
@@ -33,6 +24,7 @@ gradlePlugin {
 		}
 	}
 }
+
 kotlin {
 	jvmToolchain(21)
 }

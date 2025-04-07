@@ -1,8 +1,6 @@
 package dev.pandasystems.mcgradle
 
-import dev.pandasystems.mcgradle.tasks.ApplyMinecraftTask
-import dev.pandasystems.mcgradle.tasks.DownloadMinecraftVersionTask
-import dev.pandasystems.mcgradle.tasks.DownloadVersionManifestTask
+import dev.pandasystems.mcgradle.tasks.AddMinecraftDependenciesTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
@@ -16,30 +14,31 @@ class MCGradlePlugin : Plugin<Project> {
 			repo.setUrl("https://libraries.minecraft.net/")
 		}
 
-		// Register tasks
-		target.tasks.register("downloadVersionManifest", DownloadVersionManifestTask::class.java)
-		target.tasks.register("downloadMinecraftVersion", DownloadMinecraftVersionTask::class.java)
-		target.tasks.register("applyMinecraft", ApplyMinecraftTask::class.java)
+		// Create mapping configurations
+		val mappedImplementation = target.configurations.create("mappedImplementation") {
+			it.isCanBeConsumed = false
+			it.isCanBeResolved = true
+		}
+		target.configurations.getByName("implementation") { it.extendsFrom(mappedImplementation) }
+		val mappedCompileOnly = target.configurations.create("mappedCompileOnly") {
+			it.isCanBeConsumed = false
+			it.isCanBeResolved = true
+		}
+		target.configurations.getByName("compileOnly") { it.extendsFrom(mappedCompileOnly) }
+		val mappedRuntimeOnly = target.configurations.create("mappedRuntimeOnly") {
+			it.isCanBeConsumed = false
+			it.isCanBeResolved = true
+		}
+		target.configurations.getByName("runtimeOnly") { it.extendsFrom(mappedRuntimeOnly) }
 
-		target.tasks.named("prepareKotlinBuildScriptModel").configure { it.dependsOn("applyMinecraft") }
+		// Create Minecraft configuration
+		val minecraft = target.configurations.create("minecraft") {
+			it.isCanBeConsumed = false
+			it.isCanBeResolved = true
+		}
 
-//		javaClass.getClassLoader().getResourceAsStream("1.21.5.json").use {
-//			val jsonObject: JsonObject = gson.fromJson<JsonObject>(InputStreamReader(it!!), JsonObject::class.java)
-//
-//			// Implement libraries
-//			jsonObject.getAsJsonArray("libraries").forEach {
-//				target.dependencies.add("implementation", it!!.getAsJsonObject().get("name").asString)
-//			}
-//
-//			// Download Minecraft
-//			val downloadsObject = jsonObject.getAsJsonObject("downloads")
-//			val clientUrl = downloadsObject.getAsJsonObject("client").get("url").asString
-//			val clientMappingsUrl = downloadsObject.getAsJsonObject("client_mappings").get("url").asString
-//			val serverUrl = downloadsObject.getAsJsonObject("server").get("url").asString
-//			val serverMappingsUrl = downloadsObject.getAsJsonObject("server_mappings").get("url").asString
-//
-//
-//			// Implement Minecraft and apply mappings
-//		}
+		// Register the AddMinecraftDependenciesTask
+		target.tasks.register("addMinecraftDependencies", AddMinecraftDependenciesTask::class.java)
+		target.tasks.getByName("prepareKotlinBuildScriptModel") {}
 	}
 }
