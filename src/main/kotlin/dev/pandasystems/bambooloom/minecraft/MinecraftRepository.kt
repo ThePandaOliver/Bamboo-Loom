@@ -1,9 +1,8 @@
-package dev.pandasystems.mcgradle.minecraft
+package dev.pandasystems.bambooloom.minecraft
 
-import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import dev.pandasystems.mcgradle.GSON
-import dev.pandasystems.mcgradle.utils.downloadFileTo
+import dev.pandasystems.bambooloom.GSON
+import dev.pandasystems.bambooloom.utils.downloadFileTo
 import org.gradle.api.Project
 import java.io.File
 import java.net.URI

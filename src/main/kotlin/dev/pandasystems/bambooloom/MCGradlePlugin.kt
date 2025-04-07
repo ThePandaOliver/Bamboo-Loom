@@ -1,12 +1,13 @@
-package dev.pandasystems.mcgradle
+package dev.pandasystems.bambooloom
 
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import dev.pandasystems.mcgradle.tasks.AddMinecraftDependenciesTask
+import dev.pandasystems.bambooloom.tasks.AddMinecraftDependenciesTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 
-val GSON = GsonBuilder().setPrettyPrinting().create()
+val GSON: Gson = GsonBuilder().setPrettyPrinting().create()
 
 class MCGradlePlugin : Plugin<Project> {
 	override fun apply(target: Project) {

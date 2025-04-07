@@ -1,6 +1,6 @@
-package dev.pandasystems.mcgradle.tasks
+package dev.pandasystems.bambooloom.tasks
 
-import dev.pandasystems.mcgradle.minecraft.MinecraftRepository
+import dev.pandasystems.bambooloom.minecraft.MinecraftRepository
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 

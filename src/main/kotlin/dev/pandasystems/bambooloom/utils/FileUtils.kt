@@ -1,4 +1,4 @@
-package dev.pandasystems.mcgradle.utils
+package dev.pandasystems.bambooloom.utils
 
 import java.io.File
 import java.net.URL
