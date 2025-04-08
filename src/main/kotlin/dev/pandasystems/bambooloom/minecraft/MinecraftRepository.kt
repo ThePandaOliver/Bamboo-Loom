@@ -1,9 +1,9 @@
 package dev.pandasystems.bambooloom.minecraft
 
-import com.google.gson.JsonObject
 import dev.pandasystems.bambooloom.GSON
 import dev.pandasystems.bambooloom.utils.downloadFileTo
 import org.gradle.api.Project
+import org.gradle.internal.impldep.com.google.gson.JsonObject
 import java.io.File
 import java.net.URI
 

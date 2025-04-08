@@ -1,11 +1,11 @@
 package dev.pandasystems.bambooloom
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import dev.pandasystems.bambooloom.tasks.AddMinecraftDependenciesTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import org.gradle.internal.impldep.com.google.gson.Gson
+import org.gradle.internal.impldep.com.google.gson.GsonBuilder
 
 val GSON: Gson = GsonBuilder().setPrettyPrinting().create()
 
