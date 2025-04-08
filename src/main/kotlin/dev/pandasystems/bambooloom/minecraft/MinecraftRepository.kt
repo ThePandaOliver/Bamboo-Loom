@@ -1,11 +1,14 @@
 package dev.pandasystems.bambooloom.minecraft
 
-import dev.pandasystems.bambooloom.GSON
 import dev.pandasystems.bambooloom.utils.downloadFileTo
 import org.gradle.api.Project
+import org.gradle.internal.impldep.com.google.gson.Gson
+import org.gradle.internal.impldep.com.google.gson.GsonBuilder
 import org.gradle.internal.impldep.com.google.gson.JsonObject
 import java.io.File
 import java.net.URI
+
+val GSON: Gson = GsonBuilder().setPrettyPrinting().create()
 
 object MinecraftRepository {
 	private const val versionsManifestUrl = "https://launchermeta.mojang.com/mc/game/version_manifest.json"

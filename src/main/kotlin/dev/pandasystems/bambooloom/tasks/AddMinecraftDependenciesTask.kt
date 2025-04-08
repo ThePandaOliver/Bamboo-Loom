@@ -5,11 +5,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 
 abstract class AddMinecraftDependenciesTask : DefaultTask() {
-    init {
-        group = "MC Gradle"
-        description = "Adds Minecraft dependencies for the specified version"
-    }
-
     @TaskAction
     fun addDependencies() {
         project.configurations.getByName("minecraft").dependencies.forEach { dependency ->
