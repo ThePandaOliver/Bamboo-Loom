@@ -1,6 +1,6 @@
 package dev.pandasystems.bambooloom
 
-import dev.pandasystems.bambooloom.model.VersionManifest
+import dev.pandasystems.bambooloom.model.VersionListManifest
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
@@ -43,7 +43,7 @@ class MCGradlePlugin : Plugin<Project> {
 
 		// Runs after build scripts has been evaluated.
 		project.afterEvaluate {
-			VersionManifest.initialize(project)
+			VersionListManifest.initialize(project)
 		}
 	}
 }
