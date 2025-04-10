@@ -12,14 +12,15 @@ repositories {
 }
 
 dependencies {
+	implementation("com.google.code.gson:gson:2.12.1")
 	implementation(kotlin("stdlib-jdk8"))
 }
 
 gradlePlugin {
 	plugins {
-		create("mcgradle") {
-			id = "dev.pandasystems.mcgradle"
-			implementationClass = "dev.pandasystems.mcgradle.MCGradlePlugin"
+		create("bambooLoom") {
+			id = "dev.pandasystems.bamboo-loom"
+			implementationClass = "dev.pandasystems.bambooloom.BambooLoomPlugin"
 		}
 	}
 }

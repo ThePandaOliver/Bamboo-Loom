@@ -1,6 +1,6 @@
 package dev.pandasystems.bambooloom.model
 
-import dev.pandasystems.bambooloom.MCGradlePlugin
+import dev.pandasystems.bambooloom.BambooLoomPlugin
 import java.io.File
 import java.net.URI
 
@@ -34,7 +34,7 @@ data class VersionManifest(
 		lateinit var versionManifest: VersionManifest
 
 		val file: File by lazy {
-			val file = MCGradlePlugin.versionCacheDir.resolve("${versionManifest.id}/${if (this == versionManifest.downloads.client) "client" else "server"}.jar")
+			val file = BambooLoomPlugin.versionCacheDir.resolve("${versionManifest.id}/${if (this == versionManifest.downloads.client) "client" else "server"}.jar")
 			if (!file.exists()) {
 				URI(url).toURL().openStream().use { input ->
 					file.outputStream().use { output ->
@@ -67,7 +67,7 @@ data class VersionManifest(
 		lateinit var versionManifest: VersionManifest
 
 		val file: File by lazy {
-			val file = MCGradlePlugin.versionCacheDir.resolve("${versionManifest.id}/libraries/$path")
+			val file = BambooLoomPlugin.versionCacheDir.resolve("${versionManifest.id}/libraries/$path")
 			if (!file.exists()) {
 				URI(url).toURL().openStream().use { input ->
 					file.outputStream().use { output ->

@@ -1,8 +1,8 @@
 package dev.pandasystems.bambooloom.model
 
-import dev.pandasystems.bambooloom.MCGradlePlugin
-import org.gradle.internal.impldep.com.google.gson.Gson
-import org.gradle.internal.impldep.com.google.gson.JsonObject
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import dev.pandasystems.bambooloom.BambooLoomPlugin
 import java.net.URI
 
 object VersionListManifest {
@@ -12,7 +12,7 @@ object VersionListManifest {
 	lateinit var versions: Map<String, Version>
 
 	init {
-		if (!MCGradlePlugin.versionManifestFile.exists()) {
+		if (!BambooLoomPlugin.versionManifestFile.exists()) {
 			download()
 		} else {
 			initVersions()
@@ -31,7 +31,7 @@ object VersionListManifest {
 	}
 
 	fun download() {
-		val output = MCGradlePlugin.versionManifestFile
+		val output = BambooLoomPlugin.versionManifestFile
 		if (!output.parentFile.exists())
 			output.parentFile.mkdirs()
 
@@ -45,7 +45,7 @@ object VersionListManifest {
 	}
 
 	private fun initVersions() {
-		val versionManifest = MCGradlePlugin.versionManifestFile.readText()
+		val versionManifest = BambooLoomPlugin.versionManifestFile.readText()
 
 		val manifestObj = Gson().fromJson(versionManifest, JsonObject::class.java)
 		versions = manifestObj.getAsJsonArray("versions")

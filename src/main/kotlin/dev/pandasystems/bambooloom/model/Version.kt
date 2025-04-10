@@ -1,7 +1,7 @@
 package dev.pandasystems.bambooloom.model
 
-import dev.pandasystems.bambooloom.MCGradlePlugin
-import org.gradle.internal.impldep.com.google.gson.Gson
+import com.google.gson.Gson
+import dev.pandasystems.bambooloom.BambooLoomPlugin
 import java.net.URI
 
 data class Version(
@@ -14,7 +14,7 @@ data class Version(
 	val complianceLevel: Int
 ) {
 	val manifest: VersionManifest by lazy {
-		val manifestFile = MCGradlePlugin.versionCacheDir.resolve("$id/manifest.json")
+		val manifestFile = BambooLoomPlugin.versionCacheDir.resolve("$id/manifest.json")
 		if (!manifestFile.exists()) {
 			if (!manifestFile.parentFile.exists()) {
 				manifestFile.parentFile.mkdirs()

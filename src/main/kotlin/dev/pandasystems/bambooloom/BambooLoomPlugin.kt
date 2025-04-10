@@ -7,7 +7,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import java.io.File
 
-class MCGradlePlugin : Plugin<Project> {
+class BambooLoomPlugin : Plugin<Project> {
 	override fun apply(project: Project) {
 		initialize(project)
 
