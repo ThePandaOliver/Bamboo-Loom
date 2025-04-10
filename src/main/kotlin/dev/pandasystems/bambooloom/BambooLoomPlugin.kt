@@ -1,16 +1,19 @@
 package dev.pandasystems.bambooloom
 
+import com.google.gson.Gson
 import dev.pandasystems.bambooloom.model.VersionListManifest
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
-import java.io.File
+import org.gradle.kotlin.dsl.maven
 
 class BambooLoomPlugin : Plugin<Project> {
-	override fun apply(project: Project) {
-		initialize(project)
+	companion object {
+		val GSON = Gson()
+	}
 
+	override fun apply(project: Project) {
 		project.plugins.apply("java-library")
 
 		// Register repositories
@@ -20,29 +23,29 @@ class BambooLoomPlugin : Plugin<Project> {
 
 		// Create mapping configurations
 		val mappedImplementation = project.configurations.create("mappedImplementation") {
-			it.isCanBeConsumed = false
-			it.isCanBeResolved = true
+			isCanBeConsumed = false
+			isCanBeResolved = true
 		}
-		project.configurations.getByName("implementation") { it.extendsFrom(mappedImplementation) }
+		project.configurations.getByName("implementation") { extendsFrom(mappedImplementation) }
 		val mappedCompileOnly = project.configurations.create("mappedCompileOnly") {
-			it.isCanBeConsumed = false
-			it.isCanBeResolved = true
+			isCanBeConsumed = false
+			isCanBeResolved = true
 		}
-		project.configurations.getByName("compileOnly") { it.extendsFrom(mappedCompileOnly) }
+		project.configurations.getByName("compileOnly") { extendsFrom(mappedCompileOnly) }
 		val mappedRuntimeOnly = project.configurations.create("mappedRuntimeOnly") {
-			it.isCanBeConsumed = false
-			it.isCanBeResolved = true
+			isCanBeConsumed = false
+			isCanBeResolved = true
 		}
-		project.configurations.getByName("runtimeOnly") { it.extendsFrom(mappedRuntimeOnly) }
+		project.configurations.getByName("runtimeOnly") { extendsFrom(mappedRuntimeOnly) }
 
 		// Create Minecraft configuration
 		val minecraft = project.configurations.create("minecraft") {
-			it.isCanBeConsumed = false
-			it.isCanBeResolved = true
+			isCanBeConsumed = false
+			isCanBeResolved = true
 		}
 		val mapping = project.configurations.create("mapping") {
-			it.isCanBeConsumed = false
-			it.isCanBeResolved = true
+			isCanBeConsumed = false
+			isCanBeResolved = true
 		}
 
 		// Runs after build scripts has been evaluated.
@@ -59,7 +62,7 @@ class BambooLoomPlugin : Plugin<Project> {
 			val wantsClient = dependency.name != "server"
 			val wantsServer = dependency.name != "client"
 
-			val version = VersionListManifest.getVersion(dependency.version!!)
+			val version = VersionListManifest.get(project).getVersion(dependency.version!!)
 			val manifest = version.manifest
 			val clientDownload = manifest.downloads.client
 			val serverDownload = manifest.downloads.server
@@ -69,16 +72,6 @@ class BambooLoomPlugin : Plugin<Project> {
 
 			if (wantsServer)
 				project.dependencies.add("mappedImplementation", project.files(serverDownload.file))
-		}
-	}
-
-	companion object {
-		lateinit var versionCacheDir: File
-		lateinit var versionManifestFile: File
-
-		private fun initialize(project: Project) {
-			versionCacheDir = project.gradle.gradleUserHomeDir.resolve("caches/bamboo-loom/versions")
-			versionManifestFile = versionCacheDir.resolve("version_manifest.json")
 		}
 	}
 }

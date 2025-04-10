@@ -1,7 +1,7 @@
 plugins {
-	`java-gradle-plugin`
+	`kotlin-dsl`
 	`maven-publish`
-	kotlin("jvm")
+	kotlin("jvm") version "2.0.21"
 }
 
 group = "dev.pandasystems"
@@ -12,8 +12,9 @@ repositories {
 }
 
 dependencies {
+	implementation(kotlin("stdlib"))
+	// https://mvnrepository.com/artifact/com.google.code.gson/gson
 	implementation("com.google.code.gson:gson:2.12.1")
-	implementation(kotlin("stdlib-jdk8"))
 }
 
 gradlePlugin {
