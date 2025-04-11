@@ -1,25 +1,27 @@
 package dev.pandasystems.bambooloom
 
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import dev.pandasystems.bambooloom.model.VersionListManifest
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import org.gradle.internal.impldep.com.fasterxml.jackson.annotation.JsonInclude
 import org.gradle.kotlin.dsl.maven
+import java.io.IOException
 
 class BambooLoomPlugin : Plugin<Project> {
 	companion object {
-		val GSON = Gson()
+		val GSON: Gson = GsonBuilder()
+			.create()
 	}
 
 	override fun apply(project: Project) {
 		project.plugins.apply("java-library")
 
 		// Register repositories
-		project.repositories.maven { repo: MavenArtifactRepository ->
-			repo.setUrl("https://libraries.minecraft.net/")
-		}
+		project.repositories.maven("https://libraries.minecraft.net/")
 
 		// Create mapping configurations
 		val mappedImplementation = project.configurations.create("mappedImplementation") {
@@ -62,16 +64,18 @@ class BambooLoomPlugin : Plugin<Project> {
 			val wantsClient = dependency.name != "server"
 			val wantsServer = dependency.name != "client"
 
-			val version = VersionListManifest.get(project).getVersion(dependency.version!!)
+			val version = VersionListManifest.get(project).getVersion(project, dependency.version!!)
 			val manifest = version.manifest
-			val clientDownload = manifest.downloads.client
-			val serverDownload = manifest.downloads.server
 
-			if (wantsClient)
+			if (wantsClient) {
+				val clientDownload = manifest.downloads.client
 				project.dependencies.add("mappedImplementation", project.files(clientDownload.file))
+			}
 
-			if (wantsServer)
+			if (wantsServer) {
+				val serverDownload = manifest.downloads.server
 				project.dependencies.add("mappedImplementation", project.files(serverDownload.file))
+			}
 		}
 	}
 }

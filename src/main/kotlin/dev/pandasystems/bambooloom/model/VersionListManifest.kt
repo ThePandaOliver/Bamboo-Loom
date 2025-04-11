@@ -4,12 +4,10 @@ import com.google.gson.JsonObject
 import dev.pandasystems.bambooloom.BambooLoomPlugin
 import dev.pandasystems.bambooloom.utils.LoomPaths
 import org.gradle.api.Project
-import org.gradle.internal.impldep.com.google.gson.Gson
-import org.gradle.internal.lazy.Lazy
 import java.io.File
 import java.net.URI
 
-class VersionListManifest private constructor(private val project: Project) {
+class VersionListManifest(private val project: Project) {
 	companion object {
 		private val instances = mutableMapOf<Project, VersionListManifest>()
 
@@ -25,20 +23,20 @@ class VersionListManifest private constructor(private val project: Project) {
 
 	init {
 		if (!LoomPaths.versionsManifestFile(project).exists()) {
-			download()
+			download(project)
 		} else {
-			initVersions()
+			initVersions(project)
 		}
 	}
 
-	fun getVersion(version: String): Version {
-		if (!versions.contains(version)) download()
+	fun getVersion(project: Project, version: String): Version {
+		if (!versions.contains(version)) download(project)
 		val versionData = versions[version]
 
 		return versionData ?: throw IllegalArgumentException("Version $version not found in manifest.")
 	}
 
-	fun download() {
+	fun download(project: Project) {
 		val output = LoomPaths.versionsManifestFile(project)
 		if (!output.parentFile.exists())
 			output.parentFile.mkdirs()
@@ -49,24 +47,27 @@ class VersionListManifest private constructor(private val project: Project) {
 			}
 		}
 
-		initVersions()
+		initVersions(project)
 	}
 
-	private fun initVersions() {
-		val versionManifest = LoomPaths.versionsManifestFile(project).readText()
+	private fun initVersions(project: Project) {
+		val versionManifestFile = LoomPaths.versionsManifestFile(project)
 
-		val manifestObj: JsonObject = BambooLoomPlugin.GSON.fromJson(versionManifest, JsonObject::class.java)
-		versions = manifestObj["versions"]?.asJsonArray
-			?.map { it.asJsonObject }
-			?.associate { versionObj ->
-				val data = BambooLoomPlugin.GSON.fromJson(versionObj, Version::class.java)
-				data.id to data
-			} ?: emptyMap()
+		val manifestObj: JsonObject =
+			BambooLoomPlugin.GSON.fromJson(versionManifestFile.readText(), JsonObject::class.java)
+		versions = manifestObj["versions"].asJsonArray
+			.map { it.asJsonObject }
+			.associate {
+				val version = Version(it)
+				version.id to version
+			}
 
 		val latestObj: JsonObject = manifestObj["latest"]!!.asJsonObject
 		latest = Latest(
-			release = versions[latestObj["release"]!!.asString] ?: throw IllegalArgumentException("Latest release version not found in manifest."),
-			snapshot = versions[latestObj["snapshot"]!!.asString] ?: throw IllegalArgumentException("Latest snapshot version not found in manifest.")
+			release = versions[latestObj["release"].asString]
+				?: throw IllegalArgumentException("Latest release version not found in manifest."),
+			snapshot = versions[latestObj["snapshot"].asString]
+				?: throw IllegalArgumentException("Latest snapshot version not found in manifest.")
 		)
 	}
 
@@ -75,15 +76,15 @@ class VersionListManifest private constructor(private val project: Project) {
 		val snapshot: Version,
 	)
 
-	inner class Version(
-		val id: String,
-		val type: String,
-		val url: String,
-		val time: String,
-		val releaseTime: String,
-		val sha1: String,
-		val complianceLevel: Int
-	) {
+	inner class Version(json: JsonObject) {
+		val id: String = json["id"].asString
+		val type: String = json["type"].asString
+		val url: String = json["url"].asString
+		val time: String = json["time"].asString
+		val releaseTime: String = json["releaseTime"].asString
+		val sha1: String = json["sha1"].asString
+		val complianceLevel: Int = json["complianceLevel"].asInt
+
 		val manifest: VersionManifest by lazy {
 			val manifestFile = LoomPaths.versionCacheDir(project).resolve("$id/manifest.json")
 			if (!manifestFile.exists()) {
@@ -98,39 +99,77 @@ class VersionListManifest private constructor(private val project: Project) {
 				}
 			}
 
-			BambooLoomPlugin.GSON.fromJson(manifestFile.readText(), VersionManifest::class.java)
+			val json = BambooLoomPlugin.GSON.fromJson(manifestFile.readText(), JsonObject::class.java)
+			VersionManifest(json)
 		}
 
-		inner class VersionManifest(
-			// arguments
-			// assetIndex
-			// assets
-			val complianceLevel: Int,
-			val downloads: Downloads,
-			val id: String,
-			// javaVersion
-			val library: List<Library>,
-			// logging
-			val mainClass: String,
-			val minimumLauncherVersion: Int,
-			val releaseTime: String,
-			val time: String,
-			val type: String
-		) {
+		inner class VersionManifest(json: JsonObject) {
+			val complianceLevel: Int = json["complianceLevel"].asInt
+			val downloads: Downloads = Downloads(
+				client = Download(
+					path = "jars/client.jar",
+					sha1 = json["downloads"].asJsonObject["client"].asJsonObject["sha1"].asString,
+					size = json["downloads"].asJsonObject["client"].asJsonObject["size"].asInt,
+					url = json["downloads"].asJsonObject["client"].asJsonObject["url"].asString
+				),
+				client_mappings = Download(
+					path = "mappings/client.txt",
+					sha1 = json["downloads"].asJsonObject["client_mappings"].asJsonObject["sha1"].asString,
+					size = json["downloads"].asJsonObject["client_mappings"].asJsonObject["size"].asInt,
+					url = json["downloads"].asJsonObject["client_mappings"].asJsonObject["url"].asString
+				),
+				server = Download(
+					path = "jars/server.jar",
+					sha1 = json["downloads"].asJsonObject["server"].asJsonObject["sha1"].asString,
+					size = json["downloads"].asJsonObject["server"].asJsonObject["size"].asInt,
+					url = json["downloads"].asJsonObject["server"].asJsonObject["url"].asString
+				),
+				server_mappings = Download(
+					path = "mappings/server.txt",
+					sha1 = json["downloads"].asJsonObject["server_mappings"].asJsonObject["sha1"].asString,
+					size = json["downloads"].asJsonObject["server_mappings"].asJsonObject["size"].asInt,
+					url = json["downloads"].asJsonObject["server_mappings"].asJsonObject["url"].asString
+				)
+			)
+			val id: String = json["id"].asString
+			val library: List<Library> = json["libraries"].asJsonArray.map {
+				val libObj = it.asJsonObject
+				Library(
+					downloads = LibraryDownload(
+						path = libObj["downloads"].asJsonObject["artifact"].asJsonObject["path"].asString,
+						url = libObj["downloads"].asJsonObject["artifact"].asJsonObject["url"].asString,
+						sha1 = libObj["downloads"].asJsonObject["artifact"].asJsonObject["sha1"].asString,
+						size = libObj["downloads"].asJsonObject["artifact"].asJsonObject["size"].asInt
+					),
+					name = libObj["name"].asString
+				)
+			}
+			val mainClass: String = json["mainClass"].asString
+			val minimumLauncherVersion: Int = json["minimumLauncherVersion"].asInt
+			val releaseTime: String = json["releaseTime"].asString
+			val time: String = json["time"].asString
+			val type: String = json["type"].asString
+
 			inner class Downloads(
 				val client: Download,
-				val server: Download
+				val client_mappings: Download,
+				val server: Download,
+				val server_mappings: Download
 			)
 
 			inner class Download(
+				val path: String,
 				val sha1: String,
 				val size: Int,
 				val url: String
 			) {
 				val file: File by lazy {
 					val file = LoomPaths.versionCacheDir(project)
-						.resolve("${id}/${if (this == downloads.client) "client" else "server"}.jar")
+						.resolve("${id}/$path")
 					if (!file.exists()) {
+						if (!file.parentFile.exists())
+							file.parentFile.mkdirs()
+
 						URI(url).toURL().openStream().use { input ->
 							file.outputStream().use { output ->
 								input.copyTo(output)
@@ -143,13 +182,8 @@ class VersionListManifest private constructor(private val project: Project) {
 			}
 
 			inner class Library(
-				val downloads: LibraryDownloads,
+				val downloads: LibraryDownload,
 				val name: String,
-				// rules
-			)
-
-			inner class LibraryDownloads(
-				val artifact: LibraryDownload,
 			)
 
 			inner class LibraryDownload(
@@ -161,6 +195,9 @@ class VersionListManifest private constructor(private val project: Project) {
 				val file: File by lazy {
 					val file = LoomPaths.versionCacheDir(project).resolve("${id}/libraries/$path")
 					if (!file.exists()) {
+						if (!file.parentFile.exists())
+							file.parentFile.mkdirs()
+
 						URI(url).toURL().openStream().use { input ->
 							file.outputStream().use { output ->
 								input.copyTo(output)
