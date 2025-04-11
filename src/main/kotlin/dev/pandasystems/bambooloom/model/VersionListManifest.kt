@@ -2,6 +2,7 @@ package dev.pandasystems.bambooloom.model
 
 import com.google.gson.JsonObject
 import dev.pandasystems.bambooloom.BambooLoomPlugin
+import dev.pandasystems.bambooloom.utils.IOUtils
 import dev.pandasystems.bambooloom.utils.LoomPaths
 import org.gradle.api.Project
 import java.io.File
@@ -86,21 +87,10 @@ class VersionListManifest(private val project: Project) {
 		val complianceLevel: Int = json["complianceLevel"].asInt
 
 		val manifest: VersionManifest by lazy {
-			val manifestFile = LoomPaths.versionCacheDir(project).resolve("$id/manifest.json")
-			if (!manifestFile.exists()) {
-				if (!manifestFile.parentFile.exists()) {
-					manifestFile.parentFile.mkdirs()
-				}
+			val file =
+				IOUtils.downloadFileTo(url, LoomPaths.versionCacheDir(project).resolve("$id/manifest.json"))
 
-				URI(url).toURL().openStream().use { input ->
-					manifestFile.outputStream().use { output ->
-						input.copyTo(output)
-					}
-				}
-			}
-
-			val json = BambooLoomPlugin.GSON.fromJson(manifestFile.readText(), JsonObject::class.java)
-			VersionManifest(json)
+			VersionManifest(BambooLoomPlugin.GSON.fromJson(file.readText(), JsonObject::class.java))
 		}
 
 		inner class VersionManifest(json: JsonObject) {
