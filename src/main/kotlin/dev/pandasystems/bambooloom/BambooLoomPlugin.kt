@@ -2,14 +2,11 @@ package dev.pandasystems.bambooloom
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import dev.pandasystems.bambooloom.model.VersionListManifest
+import dev.pandasystems.bambooloom.models.VersionListManifest
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository
-import org.gradle.internal.impldep.com.fasterxml.jackson.annotation.JsonInclude
 import org.gradle.kotlin.dsl.maven
-import java.io.IOException
 
 class BambooLoomPlugin : Plugin<Project> {
 	companion object {

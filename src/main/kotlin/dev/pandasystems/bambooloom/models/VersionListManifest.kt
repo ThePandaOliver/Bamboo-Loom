@@ -1,4 +1,4 @@
-package dev.pandasystems.bambooloom.model
+package dev.pandasystems.bambooloom.models
 
 import com.google.gson.JsonObject
 import dev.pandasystems.bambooloom.BambooLoomPlugin
