@@ -2,6 +2,7 @@ plugins {
 	`kotlin-dsl`
 	`maven-publish`
 	kotlin("jvm") version "2.0.21"
+	kotlin("plugin.serialization") version "2.0.21"
 }
 
 group = "dev.pandasystems"
@@ -13,8 +14,7 @@ repositories {
 
 dependencies {
 	implementation(kotlin("stdlib"))
-	// https://mvnrepository.com/artifact/com.google.code.gson/gson
-	implementation("com.google.code.gson:gson:2.12.1")
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
 }
 
 gradlePlugin {

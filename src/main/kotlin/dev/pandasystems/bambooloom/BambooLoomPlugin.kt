@@ -1,19 +1,12 @@
 package dev.pandasystems.bambooloom
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import dev.pandasystems.bambooloom.models.VersionListManifest
+import dev.pandasystems.bambooloom.models.VersionManifest
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.kotlin.dsl.maven
 
 class BambooLoomPlugin : Plugin<Project> {
-	companion object {
-		val GSON: Gson = GsonBuilder()
-			.create()
-	}
-
 	override fun apply(project: Project) {
 		project.plugins.apply("java-library")
 
@@ -61,17 +54,27 @@ class BambooLoomPlugin : Plugin<Project> {
 			val wantsClient = dependency.name != "server"
 			val wantsServer = dependency.name != "client"
 
-			val version = VersionListManifest.get(project).getVersion(project, dependency.version!!)
+			val version = VersionManifest.get(project).getVersion(project, dependency.version!!)
 			val manifest = version.manifest
 
 			if (wantsClient) {
-				val clientDownload = manifest.downloads.client
+				val clientDownload = manifest.downloads.clientJar
 				project.dependencies.add("mappedImplementation", project.files(clientDownload.file))
 			}
 
 			if (wantsServer) {
-				val serverDownload = manifest.downloads.server
+				val serverDownload = manifest.downloads.serverJar
 				project.dependencies.add("mappedImplementation", project.files(serverDownload.file))
+			}
+
+			// Add libraries to the classpath
+			manifest.libraries.forEach { library ->
+				val libraryDownload = library.file
+				if (libraryDownload.exists()) {
+					project.dependencies.add("mappedImplementation", project.files(libraryDownload))
+				} else {
+					project.logger.warn("Library ${libraryDownload.name} does not exist, skipping.")
+				}
 			}
 		}
 	}
