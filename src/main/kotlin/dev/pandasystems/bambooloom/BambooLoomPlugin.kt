@@ -1,6 +1,7 @@
 package dev.pandasystems.bambooloom
 
-import dev.pandasystems.bambooloom.models.VersionManifest
+import dev.pandasystems.bambooloom.data.VersionManifest
+import dev.pandasystems.bambooloom.jobs.MinecraftProvider
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -40,9 +41,10 @@ class BambooLoomPlugin : Plugin<Project> {
 			isCanBeResolved = true
 		}
 
-		// Runs after build scripts has been evaluated.
-		project.afterEvaluate {
-			applyMinecraftDependency(project, minecraft)
+		listOf(
+			MinecraftProvider::class.java
+		).forEach {
+			project.objects.newInstance(it).run()
 		}
 	}
 
@@ -58,23 +60,18 @@ class BambooLoomPlugin : Plugin<Project> {
 			val manifest = version.manifest
 
 			if (wantsClient) {
-				val clientDownload = manifest.downloads.clientJar
-				project.dependencies.add("mappedImplementation", project.files(clientDownload.file))
+				val clientDownload = manifest.gameJars.clientJarFile
+				project.dependencies.add("mappedImplementation", project.files(clientDownload))
 			}
 
 			if (wantsServer) {
-				val serverDownload = manifest.downloads.serverJar
-				project.dependencies.add("mappedImplementation", project.files(serverDownload.file))
+				val serverDownload = manifest.gameJars.serverJarFile
+				project.dependencies.add("mappedImplementation", project.files(serverDownload))
 			}
 
 			// Add libraries to the classpath
 			manifest.libraries.forEach { library ->
-				val libraryDownload = library.file
-				if (libraryDownload.exists()) {
-					project.dependencies.add("mappedImplementation", project.files(libraryDownload))
-				} else {
-					project.logger.warn("Library ${libraryDownload.name} does not exist, skipping.")
-				}
+				project.dependencies.add("mappedImplementation", project.files(library.file))
 			}
 		}
 	}

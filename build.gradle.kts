@@ -15,6 +15,9 @@ repositories {
 dependencies {
 	implementation(kotlin("stdlib"))
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+
+	implementation("org.ow2.asm:asm:9.5")
+	implementation("org.ow2.asm:asm-commons:9.5")
 }
 
 gradlePlugin {

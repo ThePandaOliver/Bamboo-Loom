@@ -1,4 +1,4 @@
-package dev.pandasystems.bambooloom.models
+package dev.pandasystems.bambooloom.data
 
 import dev.pandasystems.bambooloom.utils.LoomPaths
 import dev.pandasystems.bambooloom.utils.downloadFrom

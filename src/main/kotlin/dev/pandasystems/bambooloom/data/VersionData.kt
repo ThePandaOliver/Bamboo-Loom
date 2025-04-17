@@ -1,4 +1,4 @@
-package dev.pandasystems.bambooloom.models
+package dev.pandasystems.bambooloom.data
 
 import dev.pandasystems.bambooloom.utils.LoomPaths
 import dev.pandasystems.bambooloom.utils.downloadFrom
@@ -22,13 +22,13 @@ class VersionData(
 
 	val downloads: Downloads = json["downloads"]!!.jsonObject.let {
 		Downloads(
-			clientJar = JarDependency(
+			clientJar = Library(
 				url = it.jsonObject["client"]!!.jsonObject["url"]!!.jsonPrimitive.content,
 				sha1 = it.jsonObject["client"]!!.jsonObject["sha1"]!!.jsonPrimitive.content,
 				size = it.jsonObject["client"]!!.jsonObject["size"]!!.jsonPrimitive.content.toLong(),
 				path = LoomPaths.versionJarsDir(project, id).resolve("client.jar")
 			),
-			serverJar = JarDependency(
+			serverJar = Library(
 				url = it.jsonObject["server"]!!.jsonObject["url"]!!.jsonPrimitive.content,
 				sha1 = it.jsonObject["server"]!!.jsonObject["sha1"]!!.jsonPrimitive.content,
 				size = it.jsonObject["server"]!!.jsonObject["size"]!!.jsonPrimitive.content.toLong(),
@@ -37,8 +37,10 @@ class VersionData(
 		)
 	}
 
-	val libraries: List<JarDependency> = json["libraries"]!!.jsonArray.map {
-		JarDependency(
+	val gameJars: GameJars = GameJars(this, project)
+
+	val libraries: List<Library> = json["libraries"]!!.jsonArray.map {
+		Library(
 			url = it.jsonObject["downloads"]!!.jsonObject["artifact"]!!.jsonObject["url"]!!.jsonPrimitive.content,
 			sha1 = it.jsonObject["downloads"]!!.jsonObject["artifact"]!!.jsonObject["sha1"]!!.jsonPrimitive.content,
 			size = it.jsonObject["downloads"]!!.jsonObject["artifact"]!!.jsonObject["size"]!!.jsonPrimitive.content.toLong(),
@@ -47,20 +49,16 @@ class VersionData(
 	}
 
 	inner class Downloads(
-		val clientJar: JarDependency,
-		val serverJar: JarDependency,
+		val clientJar: Library,
+		val serverJar: Library,
 	)
 
-	inner class JarDependency(
+	inner class Library(
 		val url: String,
 		val sha1: String,
 		val size: Long,
 		val path: File
 	) {
-		val file by lazy {
-			if (!path.exists())
-				path.downloadFrom(URI(url).toURL())
-			path
-		}
+		val file by lazy { path.downloadFrom(URI(url).toURL()) }
 	}
 }

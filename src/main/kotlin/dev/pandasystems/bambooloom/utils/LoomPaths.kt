@@ -29,6 +29,11 @@ object LoomPaths {
 	fun versionJarsDir(project: Project, version: String) = versionCacheDir(project, version).resolve("jars")
 
 	/**
+	 * Returns the file path where Loom will store the version-specific mappings
+	 */
+	fun versionMappingsDir(project: Project, version: String) = versionCacheDir(project, version).resolve("mappings")
+
+	/**
 	 * Returns the file path where Loom will store all libraries
 	 */
 	fun libraryCacheDir(project: Project) = cacheDir(project).resolve("libraries")
