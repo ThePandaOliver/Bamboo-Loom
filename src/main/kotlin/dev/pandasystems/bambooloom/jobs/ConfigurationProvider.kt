@@ -3,10 +3,9 @@ package dev.pandasystems.bambooloom.jobs
 import org.gradle.api.Project
 import javax.inject.Inject
 
-abstract class ConfigurationProvider : Runnable {
-	@Inject
-	lateinit var project: Project
-
+abstract class ConfigurationProvider @Inject constructor(
+	private val project: Project
+) : Runnable {
 	override fun run() {
 		createConfiguration("mappedImplementation", "implementation")
 		createConfiguration("mappedCompileOnly", "compileOnly")

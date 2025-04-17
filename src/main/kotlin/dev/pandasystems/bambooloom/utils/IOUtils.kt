@@ -19,3 +19,17 @@ fun File.downloadFrom(url: URL, overwrite: Boolean = false): File {
 	}
 	return this
 }
+
+fun File.exists(consumer: (File) -> Unit): File {
+	if (this.exists()) {
+		consumer(this)
+	}
+	return this
+}
+
+fun File.notExists(consumer: (File) -> Unit): File {
+	if (!this.exists()) {
+		consumer(this)
+	}
+	return this
+}
