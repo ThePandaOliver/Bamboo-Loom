@@ -1,7 +1,10 @@
 package dev.pandasystems.bambooloom.utils
 
 import java.io.File
+import java.net.URI
 import java.net.URL
+
+fun File.downloadFrom(url: String, overwrite: Boolean = false): File = downloadFrom(URI(url).toURL(), overwrite)
 
 fun File.downloadFrom(url: URL, overwrite: Boolean = false): File {
 	if (this.exists() && !overwrite) {
