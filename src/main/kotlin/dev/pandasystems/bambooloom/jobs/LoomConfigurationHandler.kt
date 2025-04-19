@@ -1,10 +1,8 @@
 package dev.pandasystems.bambooloom.jobs
 
 import dev.pandasystems.bambooloom.BambooLoomPlugin
-import org.gradle.api.Project
-import javax.inject.Inject
 
-class ConfigurationProvider(val plugin: BambooLoomPlugin) {
+class LoomConfigurationHandler(val plugin: BambooLoomPlugin) {
 	init {
 		val project = plugin.project
 
@@ -18,11 +16,6 @@ class ConfigurationProvider(val plugin: BambooLoomPlugin) {
 			}
 		}
 
-		createConfiguration("mappedImplementation", "implementation")
-		createConfiguration("mappedCompileOnly", "compileOnly")
-		createConfiguration("mappedRuntimeOnly", "runtimeOnly")
-
-		createConfiguration("minecraft")
-		createConfiguration("mapping", "implementation")
+		createConfiguration("mappedImplementation")
 	}
 }

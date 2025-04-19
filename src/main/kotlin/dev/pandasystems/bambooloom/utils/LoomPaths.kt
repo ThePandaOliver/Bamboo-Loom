@@ -13,4 +13,5 @@ class LoomPaths(project: Project) {
 	fun versionMappingsDir(version: String) = versionCacheDir(version).resolve("mappings")
 
 	val libraryCacheDir = cacheDir.resolve("libraries")
+	val mojangLibraryCacheDir = libraryCacheDir.resolve("com/mojang")
 }
