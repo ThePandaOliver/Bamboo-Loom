@@ -1,7 +1,7 @@
 package dev.pandasystems.bambooloom.jobs
 
 import dev.pandasystems.bambooloom.BambooLoomPlugin
-import dev.pandasystems.bambooloom.data.VersionModel
+import dev.pandasystems.bambooloom.data.VersionMeta
 import dev.pandasystems.bambooloom.utils.downloadFrom
 import dev.pandasystems.bambooloom.utils.notExists
 import java.net.URI
@@ -13,7 +13,8 @@ class MinecraftProvider(private val plugin: BambooLoomPlugin) {
 		val loomPaths = plugin.loomPaths
 		val gson = BambooLoomPlugin.gson
 
-		project.configurations.getByName("minecraft").dependencies.forEach { dependency ->
+		val minecraft = project.configurations.getByName("minecraft")
+		minecraft.dependencies.forEach { dependency ->
 			if (dependency.group != "net.minecraft" && dependency.name != "client" && dependency.name != "server" && dependency.name != "full") {
 				throw IllegalArgumentException("Minecraft dependency must be in the form of net.minecraft:[client | server | full]:<version>")
 			}
@@ -28,7 +29,7 @@ class MinecraftProvider(private val plugin: BambooLoomPlugin) {
 			// Get data
 			val versionData = versionManifest.versions.find { it.id == version } ?: throw IllegalArgumentException("Unknown version: $version")
 			val versionJson = loomPaths.versionFile(version).downloadFrom(URI(versionData.url).toURL()).run {
-				gson.fromJson(readText(), VersionModel::class.java)
+				gson.fromJson(readText(), VersionMeta::class.java)
 			}
 
 			// Add the game as dependencies

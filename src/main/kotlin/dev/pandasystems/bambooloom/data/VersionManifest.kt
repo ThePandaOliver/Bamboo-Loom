@@ -1,6 +1,6 @@
 package dev.pandasystems.bambooloom.data
 
-data class VersionManifestModel(
+data class VersionManifest(
 	val latest: Latest,
 	val versions: List<Version>
 ) {

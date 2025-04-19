@@ -1,6 +1,6 @@
 package dev.pandasystems.bambooloom.data
 
-data class VersionModel(
+data class VersionMeta(
 	val downloads: Downloads
 ) {
 	data class Downloads(

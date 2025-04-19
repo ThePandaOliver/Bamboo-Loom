@@ -23,6 +23,6 @@ class ConfigurationProvider(val plugin: BambooLoomPlugin) {
 		createConfiguration("mappedRuntimeOnly", "runtimeOnly")
 
 		createConfiguration("minecraft")
-		createConfiguration("mapping")
+		createConfiguration("mapping", "implementation")
 	}
 }

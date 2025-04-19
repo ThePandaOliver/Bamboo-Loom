@@ -2,7 +2,7 @@ package dev.pandasystems.bambooloom
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import dev.pandasystems.bambooloom.data.VersionManifestModel
+import dev.pandasystems.bambooloom.data.VersionManifest
 import dev.pandasystems.bambooloom.jobs.ConfigurationProvider
 import dev.pandasystems.bambooloom.jobs.MappingsProvider
 import dev.pandasystems.bambooloom.jobs.MinecraftProvider
@@ -19,9 +19,9 @@ class BambooLoomPlugin : Plugin<Project> {
 
 	lateinit var project: Project
 
-	val versionManifest: VersionManifestModel by lazy {
+	val versionManifest: VersionManifest by lazy {
 		val file = loomPaths.versionsManifestFile.downloadFrom("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json")
-		gson.fromJson(file.readText(), VersionManifestModel::class.java)
+		gson.fromJson(file.readText(), VersionManifest::class.java)
 	}
 
 	lateinit var loomPaths: LoomPaths
