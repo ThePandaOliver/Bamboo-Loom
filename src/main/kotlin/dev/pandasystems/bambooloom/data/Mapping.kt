@@ -1,111 +1,95 @@
 package dev.pandasystems.bambooloom.data
 
-data class Mapping(
-	val classes: List<Class>,
+import org.slf4j.LoggerFactory
+
+class Mapping(
+	val classes: Map<String, Class>,
 ) {
 	companion object {
 		fun parseOfficial(data: String): Mapping {
-			val lines = data.lines()
-
-			val classes = mutableListOf<Class>()
+			val classes = mutableMapOf<String, Class>()
 			var currentClass: Class? = null
+			val currentClassFields = mutableMapOf<String, String>()
+			val currentClassMethods = mutableMapOf<String, String>()
 
-			for (line in lines) {
+			val logger = LoggerFactory.getLogger(Mapping::class.java)
+			logger.info("Parsing mapping with official format...")
+
+			data.lineSequence().forEach { line ->
 				val trimmedLine = line.trim()
 
+				// Skip empty lines and comments that don't contain metadata
+				if (trimmedLine.isEmpty() || (trimmedLine.startsWith("#") && !trimmedLine.contains("{"))) {
+					return@forEach
+				}
+
 				when {
-					// Check for a new class mapping
-					trimmedLine.matches(Regex("\\S+ -> \\S+:")) -> {
-						// If we were parsing a previous class, add it to the list
-						if (currentClass != null) {
-							classes.add(currentClass)
+					// Class mapping line (e.g., "com.mojang.blaze3d.Blaze3D -> fib:")
+					trimmedLine.contains("->") && trimmedLine.endsWith(":") -> {
+						// Save previous class if exists
+						currentClass?.let { clazz ->
+							classes[clazz.from] = clazz
 						}
 
-						// Parse class names (obfuscated -> deobfuscated)
-						val (deobfuscatedName, obfuscatedName) = trimmedLine
-							.removeSuffix(":")
-							.split(" -> ")
-							.map { it.trim().replace('.', '/') }
-
+						// Parse new class
+						val (to, from) = trimmedLine.split("->").map { it.trim().replace('.', '/') }
+						currentClassFields.clear()
+						currentClassMethods.clear()
 						currentClass = Class(
-							from = obfuscatedName,
-							to = deobfuscatedName,
-							fields = mutableListOf(),
-							methods = mutableListOf()
+							from = from.removeSuffix(":"),
+							to = to,
+							fields = mutableMapOf(),
+							methods = mutableMapOf()
 						)
 					}
 
-					// Check for field mappings
-					trimmedLine.matches(Regex("\\s*\\S+ \\S+ -> \\S+")) -> {
-						val parts = trimmedLine.split(" -> ")
-						val descriptorAndField = parts[0].trim().split(" ")
-						val descriptor = descriptorAndField[0]
-						val deobfuscatedName = descriptorAndField[1]
-						val obfuscatedName = parts[1].trim()
+					// Method mapping (e.g., "9:10:void youJustLostTheGame() -> a")
+					trimmedLine.contains("->") && !trimmedLine.endsWith(":") -> {
+						val parts = trimmedLine.split("->").map { it.trim() }
+						val entryName = parts[1]
 
-						if (currentClass != null) {
-							(currentClass.fields as MutableList).add(
-								Field(
-									from = obfuscatedName,
-									to = deobfuscatedName,
-									descriptor = descriptor
-								)
-							)
-						}
-					}
+						// Parse method signature
+						val methodParts = parts[0].split(":")
+						val lastPart = methodParts.last().substringAfterLast(" ")
 
-					// Check for method mappings
-					trimmedLine.matches(Regex("\\s*\\d+:\\d+:\\S+ \\S+\\(.*\\) -> \\S+")) -> {
-						val parts = trimmedLine.split(" -> ")
-						val signatureAndMethod = parts[0].trim().split(" ", limit = 3)
-						val descriptor = signatureAndMethod[2]
-						val deobfuscatedName = descriptor.substringBefore("(")
-						val obfuscatedName = parts[1].trim()
-
-						if (currentClass != null) {
-							(currentClass.methods as MutableList).add(
-								Method(
-									from = obfuscatedName,
-									to = deobfuscatedName,
-									descriptor = descriptor
-								)
-							)
+						if (lastPart.contains("(") || lastPart.contains(")")) {
+							// This is a method
+							val mappedName = lastPart.substring(lastPart.lastIndexOf(" ") + 1, lastPart.indexOf("("))
+							currentClassMethods[entryName] = mappedName
+							currentClass?.let {
+								(it.methods as MutableMap)[entryName] = mappedName
+							}
+						} else {
+							// This is a field
+							val mappedName = lastPart
+							currentClassFields[entryName] = mappedName
+							currentClass?.let {
+								(it.fields as MutableMap)[entryName] = mappedName
+							}
 						}
 					}
 				}
 			}
 
-			// Add the last parsed class if any
-			if (currentClass != null) {
-				classes.add(currentClass)
+			// Remember to add the last class
+			currentClass?.let { clazz ->
+				classes[clazz.from] = clazz
 			}
 
-			return Mapping(classes = classes)
+			return Mapping(classes)
 		}
 	}
 
-	data class Class(
+	operator fun get(name: String): Class? = classes[name]
+
+	class Class(
 		val from: String,
 		val to: String,
 
-		val fields: List<Field>,
-		val methods: List<Method>,
+		val fields: Map<String, String>,
+		val methods: Map<String, String>,
 	) {
-		val fieldMap: Map<String, String> = fields.associate { it.from to it.to }
-		val methodMap: Map<String, String> = methods.associate { it.from to it.to }
+		fun getFieldName(name: String, descriptor: String = ""): String? = fields[name + descriptor]
+		fun getMethodName(name: String, descriptor: String = ""): String? = methods[name + descriptor]
 	}
-
-	data class Field(
-		val from: String,
-		val to: String,
-		val descriptor: String,
-	)
-
-	data class Method(
-		val from: String,
-		val to: String,
-		val descriptor: String,
-	)
-
-	val map: Map<String, String> = classes.associate { it.from to it.to }
 }

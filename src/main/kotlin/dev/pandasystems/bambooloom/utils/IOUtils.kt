@@ -4,9 +4,10 @@ import java.io.File
 import java.net.URI
 import java.net.URL
 
-fun File.downloadFrom(url: String, overwrite: Boolean = false): File = downloadFrom(URI(url).toURL(), overwrite)
+// Todo: Revert overwrite default to false
+fun File.downloadFrom(url: String, overwrite: Boolean = true): File = downloadFrom(URI(url).toURL(), overwrite)
 
-fun File.downloadFrom(url: URL, overwrite: Boolean = false): File {
+fun File.downloadFrom(url: URL, overwrite: Boolean = true): File {
 	if (this.exists() && !overwrite) {
 		return this
 	}
@@ -31,8 +32,10 @@ fun File.exists(consumer: (File) -> Unit): File {
 }
 
 fun File.notExists(consumer: (File) -> Unit): File {
-	if (!this.exists()) {
-		consumer(this)
-	}
+	// Todo: Revert
+	consumer(this)
+//	if (!this.exists()) {
+//		consumer(this)
+//	}
 	return this
 }

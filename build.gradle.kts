@@ -1,7 +1,7 @@
 plugins {
 	`kotlin-dsl`
 	`maven-publish`
-	kotlin("jvm") version "2.0.21"
+	kotlin("jvm") version "1.9.24"
 }
 
 group = "dev.pandasystems"
@@ -17,6 +17,11 @@ dependencies {
 
 	implementation("org.ow2.asm:asm:9.5")
 	implementation("org.ow2.asm:asm-commons:9.5")
+
+	testImplementation(gradleTestKit())
+	testImplementation(kotlin("test"))
+	testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 gradlePlugin {
@@ -30,4 +35,8 @@ gradlePlugin {
 
 kotlin {
 	jvmToolchain(21)
+}
+
+tasks.test {
+	useJUnitPlatform()
 }
