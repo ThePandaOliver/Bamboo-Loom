@@ -22,14 +22,14 @@ data class Mapping(
 						}
 
 						// Parse class names (obfuscated -> deobfuscated)
-						val (obfuscatedName, deobfuscatedName) = trimmedLine
+						val (deobfuscatedName, obfuscatedName) = trimmedLine
 							.removeSuffix(":")
 							.split(" -> ")
-							.map { it.trim() }
+							.map { it.trim().replace('.', '/') }
 
 						currentClass = Class(
-							obfuscatedName = obfuscatedName,
-							deobfuscatedName = deobfuscatedName,
+							from = obfuscatedName,
+							to = deobfuscatedName,
 							fields = mutableListOf(),
 							methods = mutableListOf()
 						)
@@ -40,14 +40,14 @@ data class Mapping(
 						val parts = trimmedLine.split(" -> ")
 						val descriptorAndField = parts[0].trim().split(" ")
 						val descriptor = descriptorAndField[0]
-						val obfuscatedName = descriptorAndField[1]
-						val deobfuscatedName = parts[1].trim()
+						val deobfuscatedName = descriptorAndField[1]
+						val obfuscatedName = parts[1].trim()
 
 						if (currentClass != null) {
 							(currentClass.fields as MutableList).add(
 								Field(
-									obfuscatedName = obfuscatedName,
-									deobfuscatedName = deobfuscatedName,
+									from = obfuscatedName,
+									to = deobfuscatedName,
 									descriptor = descriptor
 								)
 							)
@@ -59,14 +59,14 @@ data class Mapping(
 						val parts = trimmedLine.split(" -> ")
 						val signatureAndMethod = parts[0].trim().split(" ", limit = 3)
 						val descriptor = signatureAndMethod[2]
-						val obfuscatedName = descriptor.substringBefore("(")
-						val deobfuscatedName = parts[1].trim()
+						val deobfuscatedName = descriptor.substringBefore("(")
+						val obfuscatedName = parts[1].trim()
 
 						if (currentClass != null) {
 							(currentClass.methods as MutableList).add(
 								Method(
-									obfuscatedName = obfuscatedName,
-									deobfuscatedName = deobfuscatedName,
+									from = obfuscatedName,
+									to = deobfuscatedName,
 									descriptor = descriptor
 								)
 							)
@@ -85,22 +85,27 @@ data class Mapping(
 	}
 
 	data class Class(
-		val obfuscatedName: String,
-		val deobfuscatedName: String,
+		val from: String,
+		val to: String,
 
 		val fields: List<Field>,
 		val methods: List<Method>,
-	)
+	) {
+		val fieldMap: Map<String, String> = fields.associate { it.from to it.to }
+		val methodMap: Map<String, String> = methods.associate { it.from to it.to }
+	}
 
 	data class Field(
-		val obfuscatedName: String,
-		val deobfuscatedName: String,
+		val from: String,
+		val to: String,
 		val descriptor: String,
 	)
 
 	data class Method(
-		val obfuscatedName: String,
-		val deobfuscatedName: String,
+		val from: String,
+		val to: String,
 		val descriptor: String,
 	)
+
+	val map: Map<String, String> = classes.associate { it.from to it.to }
 }

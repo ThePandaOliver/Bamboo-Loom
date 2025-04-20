@@ -17,5 +17,7 @@ class LoomConfigurationHandler(val plugin: BambooLoomPlugin) {
 		}
 
 		createConfiguration("mappedImplementation")
+
+		createConfiguration("mapping")
 	}
 }
