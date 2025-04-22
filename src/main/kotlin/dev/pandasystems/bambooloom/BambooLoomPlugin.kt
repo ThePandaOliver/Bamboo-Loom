@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder
 import dev.pandasystems.bambooloom.data.VersionManifest
 import dev.pandasystems.bambooloom.data.VersionMeta
 import dev.pandasystems.bambooloom.jobs.LoomConfigurationHandler
+import dev.pandasystems.bambooloom.jobs.MappingHandler
 import dev.pandasystems.bambooloom.utils.LazyMap
 import dev.pandasystems.bambooloom.utils.LoomPaths
 import dev.pandasystems.bambooloom.utils.downloadFrom
@@ -49,5 +50,8 @@ class BambooLoomPlugin : Plugin<Project> {
 
 		// Setup
 		configurationProvider = LoomConfigurationHandler(this)
+		project.afterEvaluate {
+			MappingHandler(this@BambooLoomPlugin)
+		}
 	}
 }
