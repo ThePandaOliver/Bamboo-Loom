@@ -13,6 +13,7 @@ import java.util.jar.JarOutputStream
 import kotlin.io.path.createTempFile
 import kotlin.time.ExperimentalTime
 
+@Deprecated("Use V2 instead")
 class RemapperTool(private val mapping: Mapping) {
 	private val logger = LoggerFactory.getLogger(RemapperTool::class.java)
 

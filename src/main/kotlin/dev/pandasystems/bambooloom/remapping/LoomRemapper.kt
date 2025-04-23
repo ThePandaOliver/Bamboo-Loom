@@ -3,6 +3,7 @@ package dev.pandasystems.bambooloom.remapping
 import dev.pandasystems.bambooloom.data.Mapping
 import org.objectweb.asm.commons.Remapper
 
+@Deprecated("Use V2 instead")
 class LoomRemapper(private val mapping: Mapping) : Remapper() {
 	override fun map(internalName: String): String {
 		return mapping[internalName]?.to ?: internalName

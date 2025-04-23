@@ -12,11 +12,11 @@ repositories {
 }
 
 dependencies {
-	implementation(kotlin("stdlib"))
 	implementation("com.google.code.gson:gson:2.10.1")
 
 	implementation("org.ow2.asm:asm:9.5")
 	implementation("org.ow2.asm:asm-commons:9.5")
+	implementation("org.ow2.asm:asm-tree:9.5")
 
 	testImplementation(gradleTestKit())
 	testImplementation(kotlin("test"))
