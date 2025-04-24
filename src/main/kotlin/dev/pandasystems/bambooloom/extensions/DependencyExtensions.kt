@@ -6,6 +6,7 @@ import dev.pandasystems.bambooloom.remapping.RemapperToolV2
 import dev.pandasystems.bambooloom.utils.downloadFrom
 import dev.pandasystems.bambooloom.utils.notExists
 import org.gradle.api.Project
+import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.file.ConfigurableFileCollection
 import java.io.File
 import java.util.jar.JarEntry
@@ -13,11 +14,11 @@ import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
 import kotlin.sequences.forEach
 
-fun Project.minecraft(version: String): ConfigurableFileCollection {
+fun DependencyHandler.minecraft(project: Project, version: String): ConfigurableFileCollection {
 	val plugin = BambooLoomPlugin.instances[project]!!
 	val meta = plugin.versionMetas[version] ?: throw IllegalArgumentException("Unknown version: $version")
 
-	val clientFile = plugin.loomPaths.mojangLibraryCacheDir.resolve("minecraft/minecraft-client-$version.jar").notExists { file ->
+	val clientFile = plugin.loomPaths.libraryCacheDir.resolve("com.mojang.minecraft/minecraft-client-$version.jar").notExists { file ->
 		file.downloadFrom(meta.downloads.client.url)
 
 		val mappingJarFile = getIntermediaryJarFile(plugin, version)
@@ -25,10 +26,10 @@ fun Project.minecraft(version: String): ConfigurableFileCollection {
 		RemapperToolV2(mapping).remap(file)
 	}
 
-	return files(clientFile)
+	return project.files(clientFile)
 }
 
-fun Project.officialMappings(version: String): ConfigurableFileCollection {
+fun DependencyHandler.officialMappings(project: Project, version: String): ConfigurableFileCollection {
 	val plugin = BambooLoomPlugin.instances[project]!!
 	val meta = plugin.versionMetas[version] ?: throw IllegalArgumentException("Unknown version: $version")
 
@@ -90,7 +91,7 @@ fun Project.officialMappings(version: String): ConfigurableFileCollection {
 	}
 
 	// Write the new mappings to a jar file
-	val mappingJar = plugin.loomPaths.mappingDir.resolve("minecraft-client-$version-official.jar").notExists { file ->
+	val mappingJar = plugin.loomPaths.mappings.intermediary2OfficialJar.notExists { file ->
 		JarOutputStream(file.outputStream()).use { jar ->
 			// Create manifest
 			jar.putNextEntry(JarEntry("META-INF/MANIFEST.MF"))
@@ -105,7 +106,7 @@ fun Project.officialMappings(version: String): ConfigurableFileCollection {
 		}
 	}
 
-	return files(mappingJar)
+	return project.files(mappingJar)
 }
 
 private fun parseOfficial(text: String): MutableMap<String, String> {

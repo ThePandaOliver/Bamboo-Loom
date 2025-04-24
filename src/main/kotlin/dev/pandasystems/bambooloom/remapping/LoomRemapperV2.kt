@@ -1,8 +1,18 @@
 package dev.pandasystems.bambooloom.remapping
 
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.commons.ClassRemapper
 import org.objectweb.asm.commons.Remapper
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
+import java.util.jar.JarEntry
 import java.util.jar.JarFile
+import java.util.jar.JarOutputStream
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.iterator
+import kotlin.io.path.createTempFile
 
 class LoomRemapperV2(
 	/**
@@ -28,11 +38,11 @@ class LoomRemapperV2(
 	}
 
 	override fun mapFieldName(owner: String, name: String, descriptor: String): String {
-		return fields["$owner.$name:$descriptor"] ?: name
+		return fields["$owner.$name"] ?: name
 	}
 
 	override fun mapMethodName(owner: String, name: String, descriptor: String): String {
-		return methods["$owner.$name:$descriptor"] ?: name
+		return methods["$owner.$name"] ?: name
 	}
 
 	companion object {
@@ -72,14 +82,14 @@ class LoomRemapperV2(
 						val descriptor = parts[1]
 						val unmappedName = parts[2]
 						val mappedName = parts[3]
-						fields["$lastClass.$unmappedName:$descriptor"] = mappedName
+						fields["$lastClass.$unmappedName"] = mappedName
 					}
 
 					type == "m" && lastClass != null -> {
 						val descriptor = parts[1]
 						val unmappedName = parts[2]
 						val mappedName = parts[3]
-						methods["$lastClass.$unmappedName:$descriptor"] = mappedName
+						methods["$lastClass.$unmappedName"] = mappedName
 					}
 				}
 			}
@@ -101,6 +111,62 @@ class LoomRemapperV2(
 		 */
 		fun parseTinyJar(jar: JarFile): LoomRemapperV2 {
 			return parseTiny(jar.getInputStream(jar.getJarEntry("mappings/mappings.tiny")).readBytes().decodeToString())
+		}
+
+		/**
+		 * Fetches the tiny mappings located in the given jar, and parses them into a `LoomRemapperV2` object.
+		 * @see parseTiny
+		 */
+		fun parseTinyJar(jar: File): LoomRemapperV2 {
+			return parseTinyJar(JarFile(jar))
+		}
+	}
+
+	fun remap(jarFile: JarFile, outputFile: File) {
+		// Use ConcurrentHashMap to store remapped entries
+		val remappedEntries = ConcurrentHashMap<String, ByteArray>()
+
+		jarFile.use { jar ->
+			for (entry in jar.entries()) {
+				val unmappedFullName = entry.name
+
+				if (unmappedFullName.startsWith("META-INF/") && (
+							unmappedFullName.endsWith(".SF") ||
+									unmappedFullName.endsWith(".RSA") ||
+									unmappedFullName.endsWith(".DSA") ||
+									unmappedFullName.equals("META-INF/MANIFEST.MF", true)
+						)
+				) {
+					continue
+				}
+
+				val extension = "." + unmappedFullName.substringAfterLast('.', "")
+				val unmappedName = unmappedFullName.removeSuffix(extension)
+
+				val mappedName = classes[unmappedName] ?: unmappedName
+				val mappedFullName = "$mappedName$extension"
+
+				val bytes = jar.getInputStream(entry).readBytes()
+				remappedEntries[mappedFullName] = if (classes.containsKey(unmappedName)) {
+					val classReader = ClassReader(bytes)
+					val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
+
+					val classVisitor = ClassRemapper(classWriter, this)
+					classReader.accept(classVisitor, ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
+
+					classWriter.toByteArray()
+				} else {
+					bytes
+				}
+			}
+		}
+
+		JarOutputStream(outputFile.outputStream()).use { outputStream ->
+			for ((newName, bytes) in remappedEntries) {
+				outputStream.putNextEntry(JarEntry(newName))
+				outputStream.write(bytes)
+				outputStream.closeEntry()
+			}
 		}
 	}
 }
