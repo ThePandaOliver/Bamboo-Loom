@@ -13,7 +13,7 @@ import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
 import kotlin.sequences.forEach
 
-fun DependencyHandler.minecraft(project: Project, version: String): ConfigurableFileCollection {
+fun Project.minecraft(version: String): ConfigurableFileCollection {
 	val plugin = BambooLoomPlugin.instances[project]!!
 	val meta = plugin.versionMetas[version] ?: throw IllegalArgumentException("Unknown version: $version")
 
@@ -28,7 +28,7 @@ fun DependencyHandler.minecraft(project: Project, version: String): Configurable
 	return project.files(clientFile)
 }
 
-fun DependencyHandler.officialMappings(project: Project, version: String): ConfigurableFileCollection {
+fun Project.officialMappings(version: String): ConfigurableFileCollection {
 	val plugin = BambooLoomPlugin.instances[project]!!
 	val meta = plugin.versionMetas[version] ?: throw IllegalArgumentException("Unknown version: $version")
 
