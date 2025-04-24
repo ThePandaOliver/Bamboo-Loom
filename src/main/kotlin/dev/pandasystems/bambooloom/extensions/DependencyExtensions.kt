@@ -1,8 +1,7 @@
 package dev.pandasystems.bambooloom.extensions
 
 import dev.pandasystems.bambooloom.BambooLoomPlugin
-import dev.pandasystems.bambooloom.remapping.LoomRemapperV2
-import dev.pandasystems.bambooloom.remapping.RemapperToolV2
+import dev.pandasystems.bambooloom.remapping.LoomRemapper
 import dev.pandasystems.bambooloom.utils.downloadFrom
 import dev.pandasystems.bambooloom.utils.notExists
 import org.gradle.api.Project
@@ -22,8 +21,8 @@ fun DependencyHandler.minecraft(project: Project, version: String): Configurable
 		file.downloadFrom(meta.downloads.client.url)
 
 		val mappingJarFile = getIntermediaryJarFile(plugin, version)
-		val mapping = LoomRemapperV2.parseTinyJar(JarFile(mappingJarFile))
-		RemapperToolV2(mapping).remap(file)
+		val remapper = LoomRemapper.parseTinyJar(JarFile(mappingJarFile))
+		remapper.remap(JarFile(file), file)
 	}
 
 	return project.files(clientFile)

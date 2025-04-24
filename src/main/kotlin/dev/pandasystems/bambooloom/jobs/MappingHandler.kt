@@ -1,7 +1,7 @@
 package dev.pandasystems.bambooloom.jobs
 
 import dev.pandasystems.bambooloom.BambooLoomPlugin
-import dev.pandasystems.bambooloom.remapping.LoomRemapperV2
+import dev.pandasystems.bambooloom.remapping.LoomRemapper
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import java.util.jar.JarFile
 
@@ -12,7 +12,7 @@ class MappingHandler(private val plugin: BambooLoomPlugin) {
 
 		val remappers = project.configurations.getByName("mapping").resolve().map { file ->
 			project.logger.lifecycle("Parsing mapping file: ${file.name}")
-			LoomRemapperV2.parseTinyJar(JarFile(file))
+			LoomRemapper.parseTinyJar(JarFile(file))
 		}
 		project.configurations.getByName("mappedImplementation").incoming.artifacts.artifacts.forEach { artifact ->
 			val file = artifact.file
