@@ -126,36 +126,39 @@ class LoomRemapper(
 		val remappedEntries = ConcurrentHashMap<String, ByteArray>()
 
 		jarFile.use { jar ->
-			for (entry in jar.entries()) {
-				val unmappedFullName = entry.name
+			val chunks = jar.entries().asSequence().chunked(1000)
+			chunks.forEach { entries ->
+				for (entry in entries.parallelStream()) {
+					val unmappedFullName = entry.name
 
-				if (unmappedFullName.startsWith("META-INF/") && (
-							unmappedFullName.endsWith(".SF") ||
-									unmappedFullName.endsWith(".RSA") ||
-									unmappedFullName.endsWith(".DSA") ||
-									unmappedFullName.equals("META-INF/MANIFEST.MF", true)
-						)
-				) {
-					continue
-				}
+					if (unmappedFullName.startsWith("META-INF/") && (
+								unmappedFullName.endsWith(".SF") ||
+										unmappedFullName.endsWith(".RSA") ||
+										unmappedFullName.endsWith(".DSA") ||
+										unmappedFullName.equals("META-INF/MANIFEST.MF", true)
+								)
+					) {
+						continue
+					}
 
-				val extension = "." + unmappedFullName.substringAfterLast('.', "")
-				val unmappedName = unmappedFullName.removeSuffix(extension)
+					val extension = "." + unmappedFullName.substringAfterLast('.', "")
+					val unmappedName = unmappedFullName.removeSuffix(extension)
 
-				val mappedName = classes[unmappedName] ?: unmappedName
-				val mappedFullName = "$mappedName$extension"
+					val mappedName = classes[unmappedName] ?: unmappedName
+					val mappedFullName = "$mappedName$extension"
 
-				val bytes = jar.getInputStream(entry).readBytes()
-				remappedEntries[mappedFullName] = if (classes.containsKey(unmappedName)) {
-					val classReader = ClassReader(bytes)
-					val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
+					val bytes = jar.getInputStream(entry).readBytes()
+					remappedEntries[mappedFullName] = if (classes.containsKey(unmappedName)) {
+						val classReader = ClassReader(bytes)
+						val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
 
-					val classVisitor = ClassRemapper(classWriter, this)
-					classReader.accept(classVisitor, ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
+						val classVisitor = ClassRemapper(classWriter, this)
+						classReader.accept(classVisitor, ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
 
-					classWriter.toByteArray()
-				} else {
-					bytes
+						classWriter.toByteArray()
+					} else {
+						bytes
+					}
 				}
 			}
 		}
