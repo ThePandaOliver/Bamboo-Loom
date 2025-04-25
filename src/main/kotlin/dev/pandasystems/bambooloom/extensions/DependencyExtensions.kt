@@ -5,14 +5,13 @@ import dev.pandasystems.bambooloom.remapping.LoomRemapper
 import dev.pandasystems.bambooloom.utils.downloadFrom
 import dev.pandasystems.bambooloom.utils.notExists
 import org.gradle.api.Project
-import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.file.ConfigurableFileCollection
 import java.io.File
 import java.util.jar.JarEntry
 import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
-import kotlin.sequences.forEach
 
+@Suppress("unused")
 fun Project.minecraft(version: String): ConfigurableFileCollection {
 	val plugin = BambooLoomPlugin.instances[project]!!
 	val meta = plugin.versionMetas[version] ?: throw IllegalArgumentException("Unknown version: $version")
@@ -25,9 +24,12 @@ fun Project.minecraft(version: String): ConfigurableFileCollection {
 		remapper.remap(JarFile(file), file)
 	}
 
+
+
 	return project.files(clientFile)
 }
 
+@Suppress("unused")
 fun Project.officialMappings(version: String): ConfigurableFileCollection {
 	val plugin = BambooLoomPlugin.instances[project]!!
 	val meta = plugin.versionMetas[version] ?: throw IllegalArgumentException("Unknown version: $version")
@@ -44,50 +46,46 @@ fun Project.officialMappings(version: String): ConfigurableFileCollection {
 					inputStream.close()
 				}
 			}
-	}.readText()
-
-	// Parse the official mappings to hashmap
-	val officialMappings = parseOfficial(officialMappingFile.readText())
-
-	// Create an intermediary to official mappings file in tiny format
-	val stringBuilder = StringBuilder()
-	stringBuilder.appendLine("tiny\t2\t0\tintermediary\tofficial")
-
-	var currentClass: String? = null
-	intermediaryMapping.lines().forEach { line ->
-		val parts = line.trim().split("\t".toRegex())
-
-		val type = parts[0]
-
-		when {
-			type == "c" -> {
-				val oldName = parts[1]
-				val intermediaryName = parts[2]
-				val mappedName = officialMappings["c.$oldName"]
-				currentClass = oldName
-
-				stringBuilder.appendLine("c\t$intermediaryName\t$mappedName")
-			}
-
-			type == "f" && currentClass != null -> {
-				val descriptor = parts[1]
-				val oldName = parts[2]
-				val intermediaryName = parts[3]
-				val mappedName = officialMappings["f.$currentClass.$oldName"]
-
-				stringBuilder.appendLine("\tf\t$descriptor\t$intermediaryName\t$mappedName")
-			}
-
-			type == "m" && currentClass != null -> {
-				val descriptor = parts[1]
-				val oldName = parts[2]
-				val intermediaryName = parts[3]
-				val mappedName = officialMappings["m.$currentClass.$oldName"]
-
-				stringBuilder.appendLine("\tm\t$descriptor\t$intermediaryName\t$mappedName")
-			}
-		}
 	}
+
+	// Remappers
+	val officialRemapper = LoomRemapper.parseOfficialFile(officialMappingFile).reverse()
+	val intermediaryRemapper = LoomRemapper.parseTinyFile(intermediaryMapping)
+
+	val classes = mutableMapOf<String, String>()
+	val fields = mutableMapOf<String, String>()
+	val methods = mutableMapOf<String, String>()
+
+	// Combine the mappings
+	for ((obfuscated, intermediary) in intermediaryRemapper.classes) {
+		val official = officialRemapper.classes[obfuscated]
+		if (official != null)
+			classes[intermediary] = official
+	}
+
+	for ((obfuscated, intermediary) in intermediaryRemapper.fields) {
+		val (obfuscatedOwner, _/*obfuscatedName*/, obfuscatedDescriptor) = obfuscated.split(".")
+		val officialName = officialRemapper.fields[obfuscated]
+		val intermediaryOwner = intermediaryRemapper.classes[obfuscatedOwner]
+		val intermediaryName = intermediary
+		val intermediaryDescriptor = intermediaryRemapper.remapDescriptor(obfuscatedDescriptor)
+
+		if (officialName != null && intermediaryOwner != null)
+			fields["$intermediaryOwner.$intermediaryName.$intermediaryDescriptor"] = officialName
+	}
+
+	for ((obfuscated, intermediary) in intermediaryRemapper.methods) {
+		val (obfuscatedOwner, _/*obfuscatedName*/, obfuscatedDescriptor) = obfuscated.split(".")
+		val officialName = officialRemapper.methods[obfuscated]
+		val intermediaryOwner = intermediaryRemapper.classes[obfuscatedOwner]
+		val intermediaryName = intermediary
+		val intermediaryDescriptor = intermediaryRemapper.remapDescriptor(obfuscatedDescriptor)
+
+		if (officialName != null && intermediaryOwner != null)
+			methods["$intermediaryOwner.$intermediaryName.$intermediaryDescriptor"] = officialName
+	}
+
+	val newRemapper = LoomRemapper(classes, fields, methods)
 
 	// Write the new mappings to a jar file
 	val mappingJar = plugin.loomPaths.mappings.intermediary2OfficialJar.notExists { file ->
@@ -100,58 +98,12 @@ fun Project.officialMappings(version: String): ConfigurableFileCollection {
 
 			// Create Mapping file
 			jar.putNextEntry(JarEntry("mappings/mappings.tiny"))
-			jar.write(stringBuilder.toString().toByteArray())
+			jar.write(newRemapper.serialize().toByteArray())
 			jar.closeEntry()
 		}
 	}
 
 	return project.files(mappingJar)
-}
-
-private fun parseOfficial(text: String): MutableMap<String, String> {
-	var currentClass: String? = null
-	val map = mutableMapOf<String, String>()
-
-	text.lineSequence().forEach { line ->
-		val trimmedLine = line.trim()
-
-		// Skip empty lines and comments that don't contain metadata
-		if (trimmedLine.isEmpty() || (trimmedLine.startsWith("#") && !trimmedLine.contains("{"))) {
-			return@forEach
-		}
-
-		when {
-			// Class mapping line (e.g., "com.mojang.blaze3d.Blaze3D -> fib:")
-			trimmedLine.contains("->") && trimmedLine.endsWith(":") -> {
-				// Parse new class
-				val (to, from) = trimmedLine.split("->").map { it.trim().replace('.', '/') }
-				currentClass = from.removeSuffix(":")
-				map["c.${from.removeSuffix(":")}"] = to
-			}
-
-			// Method mapping (e.g., "9:10:void youJustLostTheGame() -> a")
-			trimmedLine.contains("->") && !trimmedLine.endsWith(":") -> {
-				val parts = trimmedLine.split("->").map { it.trim() }
-				val entryName = parts[1]
-
-				// Parse method signature
-				val methodParts = parts[0].split(":")
-				val lastPart = methodParts.last().substringAfterLast(" ")
-
-				if (lastPart.contains("(") || lastPart.contains(")")) {
-					// This is a method
-					val mappedName = lastPart.substring(lastPart.lastIndexOf(" ") + 1, lastPart.indexOf("("))
-					map["m.$currentClass.$entryName"] = mappedName
-				} else {
-					// This is a field
-					val mappedName = lastPart
-					map["f.$currentClass.$entryName"] = mappedName
-				}
-			}
-		}
-	}
-
-	return map
 }
 
 private fun getIntermediaryJarFile(plugin: BambooLoomPlugin, version: String): File {

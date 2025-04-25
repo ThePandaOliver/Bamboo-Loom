@@ -11,7 +11,6 @@ import dev.pandasystems.bambooloom.utils.LoomPaths
 import dev.pandasystems.bambooloom.utils.downloadFrom
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.kotlin.dsl.maven
 import java.net.URI
 
 class BambooLoomPlugin : Plugin<Project> {
@@ -44,9 +43,6 @@ class BambooLoomPlugin : Plugin<Project> {
 		this.loomPaths = LoomPaths(project)
 
 		project.plugins.apply("java-library")
-
-		// Register repositories
-		project.repositories.maven("https://libraries.minecraft.net/")
 
 		// Setup
 		configurationProvider = LoomConfigurationHandler(this)
