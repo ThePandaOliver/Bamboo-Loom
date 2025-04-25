@@ -249,10 +249,10 @@ class LoomRemapper(
 					remappedEntries[mappedFullName] = if (classes.containsKey(unmappedName)) {
 						try {
 							val classReader = ClassReader(bytes)
-							val classWriter = ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
+							val classWriter = ClassWriter(classReader, 0)
 
-							val classVisitor = ClassRemapper(classWriter, this)
-							classReader.accept(classVisitor, ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
+							val classVisitor = LoomClassRemapper(classWriter, this)
+							classReader.accept(classVisitor, 0)
 
 							classWriter.toByteArray()
 						} catch (e: Exception) {
