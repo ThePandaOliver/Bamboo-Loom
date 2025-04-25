@@ -57,32 +57,36 @@ fun Project.officialMappings(version: String): ConfigurableFileCollection {
 	val methods = mutableMapOf<String, String>()
 
 	// Combine the mappings
-	for ((obfuscated, intermediary) in intermediaryRemapper.classes) {
-		val official = officialRemapper.classes[obfuscated]
-		if (official != null)
-			classes[intermediary] = official
+	for ((obfuscatedName, officialName) in officialRemapper.classes) {
+		val intermediaryName = intermediaryRemapper.classes[obfuscatedName]
+		if (intermediaryName != null)
+			classes[intermediaryName] = officialName
+		else
+			classes[obfuscatedName] = officialName
 	}
 
-	for ((obfuscated, intermediary) in intermediaryRemapper.fields) {
+	for ((obfuscated, officialName) in officialRemapper.fields) {
 		val (obfuscatedOwner, _/*obfuscatedName*/, obfuscatedDescriptor) = obfuscated.split(".")
-		val officialName = officialRemapper.fields[obfuscated]
 		val intermediaryOwner = intermediaryRemapper.classes[obfuscatedOwner]
-		val intermediaryName = intermediary
+		val intermediaryName = intermediaryRemapper.fields[obfuscated]
 		val intermediaryDescriptor = intermediaryRemapper.remapDescriptor(obfuscatedDescriptor)
 
-		if (officialName != null && intermediaryOwner != null)
+		if (intermediaryOwner != null || intermediaryName != null)
 			fields["$intermediaryOwner.$intermediaryName.$intermediaryDescriptor"] = officialName
+		else
+			fields[obfuscated] = officialName
 	}
 
-	for ((obfuscated, intermediary) in intermediaryRemapper.methods) {
+	for ((obfuscated, officialName) in officialRemapper.methods) {
 		val (obfuscatedOwner, _/*obfuscatedName*/, obfuscatedDescriptor) = obfuscated.split(".")
-		val officialName = officialRemapper.methods[obfuscated]
 		val intermediaryOwner = intermediaryRemapper.classes[obfuscatedOwner]
-		val intermediaryName = intermediary
+		val intermediaryName = intermediaryRemapper.methods[obfuscated]
 		val intermediaryDescriptor = intermediaryRemapper.remapDescriptor(obfuscatedDescriptor)
 
-		if (officialName != null && intermediaryOwner != null)
+		if (intermediaryOwner != null || intermediaryName != null)
 			methods["$intermediaryOwner.$intermediaryName.$intermediaryDescriptor"] = officialName
+		else
+			methods[obfuscated] = officialName
 	}
 
 	val newRemapper = LoomRemapper(classes, fields, methods)
