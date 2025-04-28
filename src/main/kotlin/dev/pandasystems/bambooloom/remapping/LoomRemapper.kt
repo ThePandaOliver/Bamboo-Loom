@@ -38,12 +38,20 @@ class LoomRemapper(
 		return classes[internalName] ?: internalName
 	}
 
+	override fun mapPackageName(name: String): String {
+		return (classes[name] ?: name).replace("/", ".")
+	}
+
 	override fun mapFieldName(owner: String, name: String, descriptor: String): String {
 		return fields["$owner.$name.$descriptor"] ?: name
 	}
 
 	override fun mapMethodName(owner: String, name: String, descriptor: String): String {
 		return methods["$owner.$name.$descriptor"] ?: name
+	}
+
+	override fun mapMethodDesc(methodDescriptor: String): String {
+		return remapDescriptor(methodDescriptor)
 	}
 
 	companion object {
