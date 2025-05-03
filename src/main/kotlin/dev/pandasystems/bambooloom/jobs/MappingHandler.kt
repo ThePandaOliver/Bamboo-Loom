@@ -1,6 +1,10 @@
 package dev.pandasystems.bambooloom.jobs
 
 import dev.pandasystems.bambooloom.BambooLoomPlugin
+import dev.pandasystems.bambooloom.remapping.TinyMapping
+import dev.pandasystems.bambooloom.remapping.deserializeTinyV2Jar
+import dev.pandasystems.bambooloom.remapping.layerTinyMapping
+import dev.pandasystems.bambooloom.remapping.remapJarWithTinyMapping
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import java.util.jar.JarFile
 
@@ -9,14 +13,14 @@ class MappingHandler(private val plugin: BambooLoomPlugin) {
 		val project = plugin.project
 		val loomPaths = plugin.loomPaths
 
-		val mappingFiles = project.configurations.getByName("mapping").resolve().map { file ->
-			JarFile(file).use { jar ->
-				val bytes = jar.getInputStream(jar.getJarEntry("mappings/mappings.tiny")).readBytes()
-				file.parentFile.resolve("${file.nameWithoutExtension}.tiny").apply { writeBytes(bytes) }
+		var mappings: TinyMapping? = null
+		project.configurations.getByName("mapping").resolve().map { file ->
+			mappings = if (mappings == null) {
+				deserializeTinyV2Jar(file)
+			} else {
+				layerTinyMapping(mappings as TinyMapping, deserializeTinyV2Jar(file))
 			}
 		}
-
-		TODO("Get Layered mappings object")
 
 		project.configurations.getByName("mappedImplementation").incoming.artifacts.artifacts.forEach { artifact ->
 			val file = artifact.file
@@ -37,7 +41,7 @@ class MappingHandler(private val plugin: BambooLoomPlugin) {
 			project.logger.lifecycle("Remapping dependency: ${file.toURI()}")
 
 			try {
-				TODO("Apply mappings")
+				remapJarWithTinyMapping(mappings!!, "official", "named", file, outputFile = outputFile)
 				project.logger.lifecycle("Successfully remapped: ${file.toURI()}")
 			} catch (e: Exception) {
 				project.logger.error("Failed to remap ${file.toURI()}: ${e.message}", e)

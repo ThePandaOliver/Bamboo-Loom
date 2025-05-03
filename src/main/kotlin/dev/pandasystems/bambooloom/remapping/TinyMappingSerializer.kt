@@ -1,5 +1,8 @@
 package dev.pandasystems.bambooloom.remapping
 
+import java.io.File
+import java.util.jar.JarFile
+
 fun deserializeTinyV2(data: String): TinyMapping {
 	val lineList = data.lines()
 	val lineIterator = lineList.iterator()
@@ -18,17 +21,12 @@ fun deserializeTinyV2(data: String): TinyMapping {
 	// Classes
 	val classes: List<MutableList<TinyClass?>> = (0 until namespaces.size).map { mutableListOf() }
 
-	// Regexes
-	val classRegex = Regex("^c(\t.){2,}")
-	val fieldRegex = Regex("^\tf(\t.\t.){2,}")
-	val methodRegex = Regex("^\tm(\t.\t.){2,}")
-
 	while (lineIterator.hasNext()) {
 		val line = lineIterator.next()
 
 		when {
-			classRegex.matches(line) -> {
-				val names = classRegex.matchEntire(line)?.groupValues?.map { it.trim() } ?: continue
+			line.startsWith("c\t") -> {
+				val names = line.replaceFirst("c\t", "").split("\t")
 				for ((index, tinyClasses) in classes.withIndex()) {
 					val namespace = namespaces[index]
 					tinyClasses += names.getOrNull(index + 1)?.let { TinyClass(namespace, it) }
@@ -36,25 +34,39 @@ fun deserializeTinyV2(data: String): TinyMapping {
 			}
 			classes.isEmpty() -> continue
 
-			fieldRegex.matches(line) -> {
-				val names = fieldRegex.matchEntire(line)?.groupValues?.map { it.trim().split("\t") } ?: continue
+			line.startsWith("\tf\t") -> {
+				val entries = line.replaceFirst("\tf\t", "").split("\t")
+				println(entries)
+				val names = entries.chunked(2).map { it[0] to it[1] }
 				for ((index, tinyClasses) in classes.withIndex()) {
 					val namespace = namespaces[index]
 					val clazz = tinyClasses.last() ?: continue
-					clazz.fields as MutableList += TinyField(namespace, names[index][0], names[index][1])
+					names.getOrNull(index)?.let { (descriptor, name) ->
+						clazz.fields as MutableList += TinyField(namespace, name, descriptor)
+					} ?: (clazz.fields as MutableList + null)
 				}
 			}
 
-			methodRegex.matches(line) -> {
-				val names = methodRegex.matchEntire(line)?.groupValues?.map { it.trim().split("\t") } ?: continue
+			line.startsWith("\tm\t") -> {
+				val entries = line.replaceFirst("\tm\t", "").split("\t")
+				val names = entries.chunked(2).map { it[0] to it[1] }
 				for ((index, tinyClasses) in classes.withIndex()) {
 					val namespace = namespaces[index]
 					val clazz = tinyClasses.last() ?: continue
-					clazz.methods as MutableList += TinyMethod(namespace, names[index][0], names[index][1])
+					names.getOrNull(index)?.let { (descriptor, name) ->
+						clazz.methods as MutableList += TinyMethod(namespace, name, descriptor)
+					} ?: (clazz.methods as MutableList + null)
 				}
 			}
 		}
 	}
 
 	return TinyMapping(namespaces, classes)
+}
+
+fun deserializeTinyV2Jar(jarFile: File): TinyMapping {
+	return JarFile(jarFile).use { jar ->
+		val bytes = jar.getInputStream(jar.getJarEntry("mappings/mappings.tiny")).readBytes()
+		deserializeTinyV2(bytes.toString(Charsets.UTF_8))
+	}
 }
