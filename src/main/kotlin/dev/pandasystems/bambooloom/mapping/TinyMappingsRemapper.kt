@@ -3,6 +3,8 @@ package dev.pandasystems.bambooloom.mapping
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.FieldVisitor
+import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.commons.ClassRemapper
 import org.objectweb.asm.commons.Remapper
@@ -96,27 +98,4 @@ class TinyMappingsRemapper(
 	override fun mapMethodName(owner: String, name: String, descriptor: String): String {
 		return methods["$owner.$name.$descriptor"] ?: name
 	}
-}
-
-class TinyMappingsRemapperV2(
-	mappings: TinyMappings,
-	fromNamespace: String,
-	toNamespace: String
-) {
-	private val classes = mappings.content.associate { it.getName(fromNamespace) to it.getName(toNamespace) }
-	private val fields = mappings.content.map { classMapping ->
-		val className = classMapping.getName(fromNamespace)
-		classMapping.fields.map { "$className.${it.getName(fromNamespace)}" to it.getName(toNamespace).split(".").first() }
-	}.flatten().toMap()
-	private val methods = mappings.content.map { classMapping ->
-		val className = classMapping.getName(fromNamespace)
-		classMapping.methods.map { "$className.${it.getName(fromNamespace)}" to it.getName(toNamespace).split(".").first() }
-	}.flatten().toMap()
-}
-
-class TinyMappingsClassRemapper(
-	classVisitor: ClassVisitor,
-	val remapper: TinyMappingsRemapperV2,
-) : ClassVisitor(Opcodes.ASM9, classVisitor) {
-
 }
