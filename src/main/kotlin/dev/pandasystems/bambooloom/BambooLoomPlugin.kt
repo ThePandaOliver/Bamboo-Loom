@@ -11,6 +11,7 @@ import dev.pandasystems.bambooloom.utils.LoomPaths
 import dev.pandasystems.bambooloom.utils.downloadFrom
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.maven
 import java.net.URI
 
 class BambooLoomPlugin : Plugin<Project> {
@@ -38,16 +39,28 @@ class BambooLoomPlugin : Plugin<Project> {
 	lateinit var configurationProvider: LoomConfigurationHandler
 
 	override fun apply(project: Project) {
-		instances[project] = this
-		this.project = project
-		this.loomPaths = LoomPaths(project)
+		try {
+			instances[project] = this
+			this.project = project
+			this.loomPaths = LoomPaths(project)
 
-		project.plugins.apply("java-library")
+			project.plugins.apply("java-library")
 
-		// Setup
-		configurationProvider = LoomConfigurationHandler(this)
-		project.afterEvaluate {
-			MappingHandler(this@BambooLoomPlugin)
+			project.repositories.maven("https://maven.fabricmc.net/")
+
+			// Setup
+			configurationProvider = LoomConfigurationHandler(this)
+			project.afterEvaluate {
+				try {
+					MappingHandler(this@BambooLoomPlugin)
+				} catch (e: Exception) {
+					project.logger.error("Failed to apply Bamboo Loom plugin after evaluation", e)
+					throw e
+				}
+			}
+		} catch (e: Exception) {
+			project.logger.error("Failed to apply Bamboo Loom plugin", e)
+			throw e
 		}
 	}
 }

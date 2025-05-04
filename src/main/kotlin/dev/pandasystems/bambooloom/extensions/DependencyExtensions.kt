@@ -1,7 +1,6 @@
 package dev.pandasystems.bambooloom.extensions
 
 import dev.pandasystems.bambooloom.BambooLoomPlugin
-import dev.pandasystems.bambooloom.remapping.LoomRemapper
 import dev.pandasystems.bambooloom.utils.downloadFrom
 import dev.pandasystems.bambooloom.utils.notExists
 import org.gradle.api.Project
@@ -21,15 +20,9 @@ fun Project.minecraft(version: String): ConfigurableFileCollection {
 	}
 
 	// Add the intermediary mapping to the mapping's configuration.
-	val intermediaryFile = getIntermediaryJarFile(plugin, version)
-	project.dependencies.add("mapping", project.files(intermediaryFile))
+	project.dependencies.add("mapping", "net.fabricmc:intermediary:$version:v2")
 
 	return project.files(clientFile)
-}
-
-fun getIntermediaryJarFile(plugin: BambooLoomPlugin, version: String): File {
-	return plugin.loomPaths.mappings.obfuscated2IntermediaryJar
-		.downloadFrom("https://maven.fabricmc.net/net/fabricmc/intermediary/$version/intermediary-$version-v2.jar")
 }
 
 //@Suppress("unused")
