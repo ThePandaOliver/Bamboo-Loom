@@ -1,4 +1,4 @@
-package dev.pandasystems.bambooloom.mapping
+package dev.pandasystems.mapping
 
 data class TinyMappings(
 	val header: TinyHeader,

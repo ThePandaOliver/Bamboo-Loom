@@ -1,0 +1,7 @@
+tiny	2	0	named	obfuscated
+c	dev/pandasystems/animal/Animal	a
+	m	()V	bark	a
+c	dev/pandasystems/animal/Dog	b
+	f	Ljava/lang/String;	NAME	a
+c	dev/pandasystems/Utils	c
+	m	(Ljava/lang/String;[Ljava/lang/String;)Ljava/lang/String;	combineString	a

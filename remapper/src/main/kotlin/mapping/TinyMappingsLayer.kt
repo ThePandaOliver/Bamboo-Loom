@@ -1,4 +1,4 @@
-package dev.pandasystems.bambooloom.mapping
+package dev.pandasystems.mapping
 
 fun TinyMappings.createLayered(layer: TinyMappings): TinyMappings {
 	val namespaces = (this.header.namespaces + layer.header.namespaces).distinct()

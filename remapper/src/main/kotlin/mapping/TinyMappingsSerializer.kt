@@ -1,4 +1,4 @@
-package dev.pandasystems.bambooloom.mapping
+package dev.pandasystems.mapping
 
 object TinyMappingsSerializer {
 	fun deserialize(content: String): TinyMappings {
