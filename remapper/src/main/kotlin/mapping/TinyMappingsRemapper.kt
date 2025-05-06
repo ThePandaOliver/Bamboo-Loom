@@ -24,6 +24,8 @@ fun TinyMappings.applyMappings(from: String, to: String, input: File, output: Fi
 		}
 	}
 
+	val haClassVisitor = HierarchyAwareClassVisitor()
+
 	// Process the entries
 	entries.toMap().forEach { (name, bytes) ->
 		// TODO: Temporary Skip signing-related files until a function for renaming the signatures for each entry is implemented
@@ -43,11 +45,8 @@ fun TinyMappings.applyMappings(from: String, to: String, input: File, output: Fi
 				val classReader = ClassReader(bytes)
 				val classWriter = ClassWriter(classReader, 0)
 
-				val classVisitor = HierarchyAwareClassVisitor(classWriter)
-				classReader.accept(classVisitor, ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
-				println(classVisitor.getMethodHierarchy())
-
-				val classRemapper = TinyClassRemapper(classVisitor, classWriter, remapper)
+				classReader.accept(haClassVisitor, ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
+				val classRemapper = TinyClassRemapper(haClassVisitor, classWriter, remapper)
 				classReader.accept(classRemapper, ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
 
 				entries[name] = classWriter.toByteArray()
