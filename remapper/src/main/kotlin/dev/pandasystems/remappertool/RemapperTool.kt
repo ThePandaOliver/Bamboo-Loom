@@ -1,15 +1,17 @@
-package dev.pandasystems.mapping
+package dev.pandasystems.remappertool
 
-import dev.pandasystems.remappers.HierarchyAwareClassVisitor
+import dev.pandasystems.remappertool.data.TinyMappings
+import dev.pandasystems.remappertool.remappers.visitors.HierarchyAwareClassVisitor
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
 import org.slf4j.LoggerFactory
-import remappers.TinyClassRemapper
-import remappers.TinyMappingsRemapper
+import dev.pandasystems.remappertool.remappers.visitors.TinyClassRemapper
+import dev.pandasystems.remappertool.remappers.TinyMappingsRemapper
 import java.io.File
 import java.util.jar.JarEntry
 import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
+import kotlin.collections.iterator
 
 fun TinyMappings.applyMappings(from: String, to: String, input: File, output: File = input) {
 	val remapper = TinyMappingsRemapper(this, from, to)
@@ -39,7 +41,7 @@ fun TinyMappings.applyMappings(from: String, to: String, input: File, output: Fi
 			return@forEach
 		}
 
-		// Remove signing-related entries from manifest
+		// Remove signing-related entries from the manifest
 		if (name == "META-INF/MANIFEST.MF") {
 			val manifestContent = bytes.toString(Charsets.UTF_8)
 			val cleanedManifest = manifestContent.lines()
@@ -73,7 +75,7 @@ fun TinyMappings.applyMappings(from: String, to: String, input: File, output: Fi
 	JarOutputStream(output.outputStream()).use { outputStream ->
 		entries.forEach { (name, bytes) ->
 			val mappedName = if (name.endsWith(".class")) {
-				remapper.mapClassName(name.substringBeforeLast(".")) + ".class"
+				remapper.map(name.substringBeforeLast(".")) + ".class"
 			} else name
 
 			outputStream.putNextEntry(JarEntry(mappedName))

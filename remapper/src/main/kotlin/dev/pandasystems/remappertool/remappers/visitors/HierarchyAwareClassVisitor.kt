@@ -1,15 +1,15 @@
-package dev.pandasystems.remappers
+package dev.pandasystems.remappertool.remappers.visitors
 
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.Opcodes.ASM9
+import org.objectweb.asm.Opcodes
 import java.util.LinkedList
 import java.util.Queue
 
-class HierarchyAwareClassVisitor : ClassVisitor(ASM9) {
+class HierarchyAwareClassVisitor : ClassVisitor(Opcodes.ASM9) {
 	private var visitingClass: String? = null
 
-	val classes = mutableMapOf<String, ClassEntry>()
+	private val classes = mutableMapOf<String, ClassEntry>()
 
 	override fun visit(version: Int, access: Int, name: String, signature: String?, superName: String?, interfaces: Array<out String>) {
 		visitingClass = name;
@@ -45,8 +45,8 @@ class HierarchyAwareClassVisitor : ClassVisitor(ASM9) {
 		}
 		return owner
 	}
-}
 
-data class ClassEntry(val name: String, val parents: List<String>) {
-	val methods = mutableListOf<String>()
+	private data class ClassEntry(val name: String, val parents: List<String>) {
+		val methods = mutableListOf<String>()
+	}
 }

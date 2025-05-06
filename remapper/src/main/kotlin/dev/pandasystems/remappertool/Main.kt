@@ -1,7 +1,6 @@
-package dev.pandasystems
+package dev.pandasystems.remappertool
 
-import dev.pandasystems.mapping.TinyMappingsSerializer
-import dev.pandasystems.mapping.applyMappings
+import dev.pandasystems.remappertool.remappers.TinyMappingsSerializer
 import java.io.File
 
 fun main() {

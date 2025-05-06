@@ -1,12 +1,13 @@
-package remappers
+package dev.pandasystems.remappertool.remappers
 
-import dev.pandasystems.mapping.TinyMappings
+import dev.pandasystems.remappertool.data.TinyMappings
+import org.objectweb.asm.commons.Remapper
 
 class TinyMappingsRemapper(
 	mappings: TinyMappings,
 	fromNamespace: String,
 	toNamespace: String
-) {
+) : Remapper() {
 	private val classes = mappings.content.associate { it.getName(fromNamespace) to it.getName(toNamespace) }
 	private val fields = mappings.content.map { classMapping ->
 		val className = classMapping.getName(fromNamespace)
@@ -17,15 +18,15 @@ class TinyMappingsRemapper(
 		classMapping.methods.map { "$className.${it.getName(fromNamespace)}" to it.getName(toNamespace).split(".").first() }
 	}.flatten().toMap()
 
-	fun mapClassName(internalName: String): String {
+	override fun map(internalName: String): String {
 		return classes[internalName] ?: internalName
 	}
 
-	fun mapFieldName(owner: String, name: String, descriptor: String): String {
+	override fun mapFieldName(owner: String, name: String, descriptor: String): String {
 		return fields["$owner.$name.$descriptor"] ?: name
 	}
 
-	fun mapMethodName(owner: String, name: String, descriptor: String): String {
+	override fun mapMethodName(owner: String, name: String, descriptor: String): String {
 		return methods["$owner.$name.$descriptor"] ?: name
 	}
 }

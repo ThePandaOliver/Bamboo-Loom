@@ -1,4 +1,4 @@
-package dev.pandasystems.mapping
+package dev.pandasystems.remappertool.data
 
 data class TinyMappings(
 	val header: TinyHeader,

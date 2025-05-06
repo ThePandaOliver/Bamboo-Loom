@@ -1,4 +1,10 @@
-package dev.pandasystems.mapping
+package dev.pandasystems.remappertool.remappers
+
+import dev.pandasystems.remappertool.data.ClassMapping
+import dev.pandasystems.remappertool.data.FieldMapping
+import dev.pandasystems.remappertool.data.MethodMapping
+import dev.pandasystems.remappertool.data.TinyHeader
+import dev.pandasystems.remappertool.data.TinyMappings
 
 fun TinyMappings.createLayered(layer: TinyMappings): TinyMappings {
 	val namespaces = (this.header.namespaces + layer.header.namespaces).distinct()
