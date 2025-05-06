@@ -28,16 +28,29 @@ fun TinyMappings.applyMappings(from: String, to: String, input: File, output: Fi
 
 	// Process the entries
 	entries.toMap().forEach { (name, bytes) ->
-		// TODO: Temporary Skip signing-related files until a function for renaming the signatures for each entry is implemented
+		// Remove signing-related files
 		if (name.startsWith("META-INF/") && (
 					name.endsWith(".SF") ||
 							name.endsWith(".RSA") ||
-							name.endsWith(".DSA") ||
-							name.equals("META-INF/MANIFEST.MF", true)
+							name.endsWith(".DSA")
 					)
 		) {
 			entries.remove(name)
 			return@forEach
+		}
+
+		// Remove signing-related entries from manifest
+		if (name == "META-INF/MANIFEST.MF") {
+			val manifestContent = bytes.toString(Charsets.UTF_8)
+			val cleanedManifest = manifestContent.lines()
+				.filter { line ->
+					!line.startsWith("Name: ") &&
+							!line.startsWith("SHA-384-Digest: ") &&
+							!line.startsWith(" ") &&  // Remove continuation lines
+							line.isNotBlank()
+				}
+				.joinToString("\n")
+			entries[name] = cleanedManifest.toByteArray()
 		}
 
 		if (name.endsWith(".class")) {
