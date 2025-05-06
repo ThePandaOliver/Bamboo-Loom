@@ -1,5 +1,6 @@
 package dev.pandasystems.mapping
 
+import dev.pandasystems.remappers.HierarchyAwareClassVisitor
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassWriter
 import org.slf4j.LoggerFactory
@@ -41,8 +42,14 @@ fun TinyMappings.applyMappings(from: String, to: String, input: File, output: Fi
 			try {
 				val classReader = ClassReader(bytes)
 				val classWriter = ClassWriter(classReader, 0)
-				val classVisitor = TinyClassRemapper(classWriter, remapper)
-				classReader.accept(classVisitor, 0)
+
+				val classVisitor = HierarchyAwareClassVisitor(classWriter)
+				classReader.accept(classVisitor, ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
+				println(classVisitor.getMethodHierarchy())
+
+				val classRemapper = TinyClassRemapper(classVisitor, classWriter, remapper)
+				classReader.accept(classRemapper, ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
+
 				entries[name] = classWriter.toByteArray()
 			} catch (e: Exception) {
 				LoggerFactory.getLogger("remapper").error("Failed to remap class $name", e)
@@ -53,7 +60,11 @@ fun TinyMappings.applyMappings(from: String, to: String, input: File, output: Fi
 	// Write the processed entries to the output jar
 	JarOutputStream(output.outputStream()).use { outputStream ->
 		entries.forEach { (name, bytes) ->
-			outputStream.putNextEntry(JarEntry(name))
+			val mappedName = if (name.endsWith(".class")) {
+				remapper.mapClassName(name.substringBeforeLast(".")) + ".class"
+			} else name
+
+			outputStream.putNextEntry(JarEntry(mappedName))
 			outputStream.write(bytes)
 			outputStream.closeEntry()
 		}

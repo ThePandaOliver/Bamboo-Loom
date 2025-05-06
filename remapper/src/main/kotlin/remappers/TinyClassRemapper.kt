@@ -1,20 +1,15 @@
 package remappers
 
 import com.google.gson.JsonObject
-import org.objectweb.asm.AnnotationVisitor
-import org.objectweb.asm.Attribute
-import org.objectweb.asm.ClassVisitor
-import org.objectweb.asm.FieldVisitor
-import org.objectweb.asm.MethodVisitor
-import org.objectweb.asm.ModuleVisitor
-import org.objectweb.asm.Opcodes
-import org.objectweb.asm.RecordComponentVisitor
-import org.objectweb.asm.TypePath
+import dev.pandasystems.remappers.HierarchyAwareClassVisitor
+import org.objectweb.asm.*
+import org.objectweb.asm.Opcodes.ASM9
 
 class TinyClassRemapper(
-	classVisitor: ClassVisitor,
+	val classVisitor: HierarchyAwareClassVisitor,
+	delegate: ClassVisitor,
 	val remapper: TinyMappingsRemapper
-) : ClassVisitor(Opcodes.ASM9, classVisitor) {
+) : ClassVisitor(ASM9, delegate) {
 	override fun visit(
 		version: Int,
 		access: Int,
