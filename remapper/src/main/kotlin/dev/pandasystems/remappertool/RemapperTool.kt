@@ -60,9 +60,9 @@ fun TinyMappings.applyMappings(from: String, to: String, input: File, output: Fi
 				val classReader = ClassReader(bytes)
 				val classWriter = ClassWriter(classReader, 0)
 
-				classReader.accept(haClassVisitor, ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
+				classReader.accept(haClassVisitor, 0)
 				val classRemapper = TinyClassRemapper(haClassVisitor, classWriter, remapper)
-				classReader.accept(classRemapper, ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
+				classReader.accept(classRemapper, 0)
 
 				entries[name] = classWriter.toByteArray()
 			} catch (e: Exception) {

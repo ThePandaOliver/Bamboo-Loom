@@ -17,6 +17,15 @@ class TinyMappingsRemapper(
 		val className = classMapping.getName(fromNamespace)
 		classMapping.methods.map { "$className.${it.getName(fromNamespace)}" to it.getName(toNamespace).split(".").first() }
 	}.flatten().toMap()
+	private val localVariables = mappings.content.map { classMapping ->
+		val className = classMapping.getName(fromNamespace)
+		classMapping.methods.map { methodMapping ->
+			val methodName = methodMapping.getName(fromNamespace)
+			methodMapping.parameters.mapIndexed { paramIndex, paramMapping ->
+				"$className.$methodName.$paramIndex" to paramMapping.getName(toNamespace)
+			}
+		}.flatten()
+	}.flatten().toMap()
 
 	override fun map(internalName: String): String {
 		return classes[internalName] ?: internalName
@@ -29,4 +38,9 @@ class TinyMappingsRemapper(
 	override fun mapMethodName(owner: String, name: String, descriptor: String): String {
 		return methods["$owner.$name.$descriptor"] ?: name
 	}
+
+	fun mapLocalVariableName(owner: String, method: String, descriptor: String, slot: Int, fallback: String): String {
+		return localVariables["$owner.$method.$descriptor.$slot"] ?: fallback
+	}
+
 }

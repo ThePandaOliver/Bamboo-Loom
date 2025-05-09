@@ -1,0 +1,1 @@
+java -jar --enable-native-access=ALL-UNNAMED enigma.jar

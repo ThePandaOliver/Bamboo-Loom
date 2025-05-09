@@ -3,6 +3,7 @@ package dev.pandasystems.remappertool.remappers
 import dev.pandasystems.remappertool.data.ClassMapping
 import dev.pandasystems.remappertool.data.FieldMapping
 import dev.pandasystems.remappertool.data.MethodMapping
+import dev.pandasystems.remappertool.data.MethodParameterMapping
 import dev.pandasystems.remappertool.data.TinyHeader
 import dev.pandasystems.remappertool.data.TinyMappings
 
@@ -72,8 +73,24 @@ private fun layerMethods(sourceNamespace: String, methodList: List<MethodMapping
 
 		result += MethodMapping(
 			names = mapping.names.toMutableMap() + layerMapping.names.toMutableMap().filter { !mapping.names.containsKey(it.key) },
+			parameters = layerMethodParameters(sourceNamespace, mapping.parameters, layerMapping.parameters),
 		)
 	}
 	tempLayerMethodList.forEach { layerMethod -> result += layerMethod}
+	return result
+}
+
+private fun layerMethodParameters(sourceNamespace: String, paramList: List<MethodParameterMapping>, layerParamList: List<MethodParameterMapping>): List<MethodParameterMapping> {
+	val result = mutableListOf<MethodParameterMapping>()
+	val tempLayerParamList = layerParamList.toMutableList()
+	for (mapping in paramList) {
+		val layerMapping = tempLayerParamList.find { it.names[sourceNamespace] == mapping.names[sourceNamespace] } ?: continue
+		tempLayerParamList.remove(layerMapping)
+
+		result += MethodParameterMapping(
+			names = mapping.names.toMutableMap() + layerMapping.names.toMutableMap().filter { !mapping.names.containsKey(it.key) },
+		)
+	}
+	tempLayerParamList.forEach { layerParam -> result += layerParam}
 	return result
 }

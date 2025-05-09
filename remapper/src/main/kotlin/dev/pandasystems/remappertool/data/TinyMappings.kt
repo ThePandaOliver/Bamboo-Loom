@@ -3,11 +3,7 @@ package dev.pandasystems.remappertool.data
 data class TinyMappings(
 	val header: TinyHeader,
 	val content: List<ClassMapping>
-) {
-	fun findClass(namespace: String, name: String): ClassMapping? {
-		return content.find { it.names[namespace] == name }
-	}
-}
+)
 
 data class TinyHeader(
 	val majorVersion: Int,
@@ -27,14 +23,6 @@ data class ClassMapping(
 	fun getName(toNamespace: String): String {
 		return names[toNamespace] ?: names.values.last()
 	}
-
-	fun findField(namespace: String, name: String): FieldMapping? {
-		return fields.find { it.names[namespace] == name }
-	}
-
-	fun findMethod(namespace: String, name: String): MethodMapping? {
-		return methods.find { it.names[namespace] == name }
-	}
 }
 
 data class FieldMapping(
@@ -49,6 +37,19 @@ data class FieldMapping(
 }
 
 data class MethodMapping(
+	/**
+	 * Namespace -> name
+	 */
+	val names: Map<String, String>,
+
+	val parameters: List<MethodParameterMapping>
+) {
+	fun getName(toNamespace: String): String {
+		return names[toNamespace] ?: names.values.last()
+	}
+}
+
+data class MethodParameterMapping(
 	/**
 	 * Namespace -> name
 	 */
