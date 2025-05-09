@@ -1,10 +1,10 @@
 package dev.pandasystems.bambooloom.jobs
 
 import dev.pandasystems.bambooloom.BambooLoomPlugin
-import dev.pandasystems.bambooloom.mapping.TinyMappings
-import dev.pandasystems.bambooloom.mapping.TinyMappingsSerializer
-import dev.pandasystems.bambooloom.mapping.applyMappings
-import dev.pandasystems.bambooloom.mapping.createLayered
+import dev.pandasystems.remappertool.applyMappings
+import dev.pandasystems.remappertool.data.TinyMappings
+import dev.pandasystems.remappertool.remappers.TinyMappingsSerializer
+import dev.pandasystems.remappertool.remappers.createLayered
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import java.util.jar.JarFile
 

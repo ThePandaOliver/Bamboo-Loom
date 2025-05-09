@@ -20,8 +20,8 @@ data class ClassMapping(
 	val fields: List<FieldMapping>,
 	val methods: List<MethodMapping>
 ) {
-	fun getName(toNamespace: String): String {
-		return names[toNamespace] ?: names.values.last()
+	fun getName(toNamespace: String): String? {
+		return names[toNamespace]
 	}
 }
 
@@ -31,8 +31,9 @@ data class FieldMapping(
 	 */
 	val names: Map<String, String>
 ) {
-	fun getName(toNamespace: String): String {
-		return names[toNamespace] ?: names.values.last()
+	@Deprecated("Use the names variable instead", ReplaceWith("names[toNamespace]"))
+	fun getName(toNamespace: String): String? {
+		return names[toNamespace]
 	}
 }
 
@@ -44,8 +45,8 @@ data class MethodMapping(
 
 	val parameters: List<MethodParameterMapping>
 ) {
-	fun getName(toNamespace: String): String {
-		return names[toNamespace] ?: names.values.last()
+	fun getName(toNamespace: String): String? {
+		return names[toNamespace]
 	}
 }
 
@@ -55,7 +56,7 @@ data class MethodParameterMapping(
 	 */
 	val names: Map<String, String>
 ) {
-	fun getName(toNamespace: String): String {
-		return names[toNamespace] ?: names.values.last()
+	fun getName(toNamespace: String): String? {
+		return names[toNamespace]
 	}
 }
