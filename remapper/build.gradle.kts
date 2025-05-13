@@ -6,6 +6,7 @@ group = "dev.pandasystems"
 version = "1.0-SNAPSHOT"
 
 repositories {
+	maven("https://maven.fabricmc.net/")
 	mavenCentral()
 }
 
@@ -23,6 +24,11 @@ dependencies {
 	implementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.23.1")
 
 	implementation("com.google.code.gson:gson:2.13.1")
+	
+	// https://mvnrepository.com/artifact/net.fabricmc/tiny-remapper
+	implementation("net.fabricmc:tiny-remapper:0.11.1")
+	// https://mvnrepository.com/artifact/net.fabricmc/mapping-io
+	implementation("net.fabricmc:mapping-io:0.7.1")
 }
 
 tasks.test {
