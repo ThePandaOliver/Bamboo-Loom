@@ -1,5 +1,6 @@
 plugins {
 	kotlin("jvm")
+	kotlin("plugin.allopen") version "1.9.24"
 }
 
 group = "dev.pandasystems"
@@ -25,9 +26,7 @@ dependencies {
 
 	implementation("com.google.code.gson:gson:2.13.1")
 	
-	// https://mvnrepository.com/artifact/net.fabricmc/tiny-remapper
 	implementation("net.fabricmc:tiny-remapper:0.11.1")
-	// https://mvnrepository.com/artifact/net.fabricmc/mapping-io
 	implementation("net.fabricmc:mapping-io:0.7.1")
 }
 
@@ -36,4 +35,8 @@ tasks.test {
 }
 kotlin {
 	jvmToolchain(21)
+	
+	allOpen { 
+		annotation("net.fabricmc.mappingio.tree.MemoryMappingTree")
+	}
 }

@@ -7,17 +7,13 @@ import net.fabricmc.mappingio.tree.MemoryMappingTree
 import net.fabricmc.mappingio.tree.VisitOrder
 import net.fabricmc.mappingio.tree.VisitableMappingTree
 
-class BambooMappingTree : VisitableMappingTree {
-	private val namespaces = mutableListOf<String>()
-	
+class BambooMappingTree : MemoryMappingTree() {
 	override fun setSrcNamespace(namespace: String?): String? {
-		namespaces.addFirst(namespace)
-		return namespace
+		TODO("Not yet implemented")
 	}
 
-	override fun setDstNamespaces(namespaces: List<String>): List<String?>? {
-		this.namespaces.addAll(namespaces)
-		return namespaces
+	override fun setDstNamespaces(namespaces: List<String?>?): List<String?>? {
+		TODO("Not yet implemented")
 	}
 
 	override fun getMetadata(): List<MappingTree.MetadataEntry?>? {
@@ -53,11 +49,11 @@ class BambooMappingTree : VisitableMappingTree {
 	}
 
 	override fun getSrcNamespace(): String? {
-		return namespaces.firstOrNull()
+		TODO("Not yet implemented")
 	}
 
 	override fun getDstNamespaces(): List<String?>? {
-		return namespaces.subList(1, namespaces.size)
+		TODO("Not yet implemented")
 	}
 
 	override fun accept(visitor: MappingVisitor?, order: VisitOrder?) {
