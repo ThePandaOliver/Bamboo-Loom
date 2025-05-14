@@ -7,77 +7,79 @@ import net.fabricmc.mappingio.tree.MemoryMappingTree
 import net.fabricmc.mappingio.tree.VisitOrder
 import net.fabricmc.mappingio.tree.VisitableMappingTree
 
-class BambooMappingTree : MemoryMappingTree() {
+class BambooMappingTree : VisitableMappingTree {
+	private val tree = MemoryMappingTree()
+	
 	override fun setSrcNamespace(namespace: String?): String? {
-		TODO("Not yet implemented")
+		return tree.setSrcNamespace(namespace)
 	}
 
 	override fun setDstNamespaces(namespaces: List<String?>?): List<String?>? {
-		TODO("Not yet implemented")
+		return tree.setDstNamespaces(namespaces)
 	}
 
 	override fun getMetadata(): List<MappingTree.MetadataEntry?>? {
-		TODO("Not yet implemented")
+		return tree.getMetadata()
 	}
 
 	override fun getMetadata(key: String?): List<MappingTree.MetadataEntry?>? {
-		TODO("Not yet implemented")
+		return tree.getMetadata(key)
 	}
 
 	override fun addMetadata(entry: MappingTree.MetadataEntry?) {
-		TODO("Not yet implemented")
+		tree.addMetadata(entry)
 	}
 
 	override fun removeMetadata(key: String?): Boolean {
-		TODO("Not yet implemented")
+		return tree.removeMetadata(key)
 	}
 
 	override fun getClasses(): Collection<MappingTree.ClassMapping?>? {
-		TODO("Not yet implemented")
+		return tree.getClasses()
 	}
 
 	override fun getClass(srcName: String?): MappingTree.ClassMapping? {
-		TODO("Not yet implemented")
+		return tree.getClass(srcName)
 	}
 
 	override fun addClass(cls: MappingTree.ClassMapping?): MappingTree.ClassMapping? {
-		TODO("Not yet implemented")
+		return tree.addClass(cls)
 	}
 
 	override fun removeClass(srcName: String?): MappingTree.ClassMapping? {
-		TODO("Not yet implemented")
+		return tree.removeClass(srcName)
 	}
 
 	override fun getSrcNamespace(): String? {
-		TODO("Not yet implemented")
+		return tree.getSrcNamespace()
 	}
 
 	override fun getDstNamespaces(): List<String?>? {
-		TODO("Not yet implemented")
+		return tree.getDstNamespaces()
 	}
 
 	override fun accept(visitor: MappingVisitor?, order: VisitOrder?) {
-		TODO("Not yet implemented")
+		tree.accept(visitor, order)
 	}
 
 	override fun visitNamespaces(srcNamespace: String?, dstNamespaces: List<String?>?) {
-		TODO("Not yet implemented")
+		tree.visitNamespaces(srcNamespace, dstNamespaces)
 	}
 
 	override fun visitClass(srcName: String?): Boolean {
-		TODO("Not yet implemented")
+		return tree.visitClass(srcName)
 	}
 
 	override fun visitField(srcName: String?, srcDesc: String?): Boolean {
-		TODO("Not yet implemented")
+		return tree.visitField(srcName, srcDesc)
 	}
 
 	override fun visitMethod(srcName: String?, srcDesc: String?): Boolean {
-		TODO("Not yet implemented")
+		return tree.visitMethod(srcName, srcDesc)
 	}
 
 	override fun visitMethodArg(argPosition: Int, lvIndex: Int, srcName: String?): Boolean {
-		TODO("Not yet implemented")
+		return tree.visitMethodArg(argPosition, lvIndex, srcName)
 	}
 
 	override fun visitMethodVar(
@@ -87,14 +89,14 @@ class BambooMappingTree : MemoryMappingTree() {
 		endOpIdx: Int,
 		srcName: String?
 	): Boolean {
-		TODO("Not yet implemented")
+		return tree.visitMethodVar(lvtRowIndex, lvIndex, startOpIdx, endOpIdx, srcName)
 	}
 
 	override fun visitDstName(targetKind: MappedElementKind?, namespace: Int, name: String?) {
-		TODO("Not yet implemented")
+		return tree.visitDstName(targetKind, namespace, name)
 	}
 
 	override fun visitComment(targetKind: MappedElementKind?, comment: String?) {
-		TODO("Not yet implemented")
+		return tree.visitComment(targetKind, comment)
 	}
 }

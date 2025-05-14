@@ -1,6 +1,5 @@
 plugins {
 	kotlin("jvm")
-	kotlin("plugin.allopen") version "1.9.24"
 }
 
 group = "dev.pandasystems"
@@ -35,8 +34,4 @@ tasks.test {
 }
 kotlin {
 	jvmToolchain(21)
-	
-	allOpen { 
-		annotation("net.fabricmc.mappingio.tree.MemoryMappingTree")
-	}
 }
