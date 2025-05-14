@@ -27,6 +27,8 @@ dependencies {
 	
 	implementation("net.fabricmc:tiny-remapper:0.11.1")
 	implementation("net.fabricmc:mapping-io:0.7.1")
+
+	implementation("org.jetbrains:annotations:24.1.0")
 }
 
 tasks.test {
