@@ -1,10 +1,10 @@
 package dev.pandasystems.bambooloom.jobs
 
 import dev.pandasystems.bambooloom.BambooLoomPlugin
-import dev.pandasystems.remappertool.applyMappings
-import dev.pandasystems.remappertool.data.TinyMappings
-import dev.pandasystems.remappertool.remappers.TinyMappingsSerializer
-import dev.pandasystems.remappertool.remappers.createLayered
+import dev.pandasystems.bambooloom.utils.notExists
+import net.fabricmc.tinyremapper.OutputConsumerPath
+import net.fabricmc.tinyremapper.TinyRemapper
+import net.fabricmc.tinyremapper.TinyUtils
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import java.util.jar.JarFile
 
@@ -13,33 +13,46 @@ class MappingHandler(private val plugin: BambooLoomPlugin) {
 		val project = plugin.project
 		val loomPaths = plugin.loomPaths
 		try {
-			// Make a layered mapping
-			require(project.configurations.getByName("mapping").resolve().isNotEmpty()) { "No mappings found!" }
-			val mappings: TinyMappings = project.configurations.getByName("mapping").resolve().map { file ->
-				val bytes = JarFile(file).use { jar -> jar.getInputStream(jar.getJarEntry("mappings/mappings.tiny")).readBytes() }
-				TinyMappingsSerializer.deserialize(bytes.toString(Charsets.UTF_8))
-			}.reduce { acc, mappings ->  acc.createLayered(mappings)}
-
+			val mappingProviders = project.configurations.getByName("mappings").resolve().map { file ->
+				// Check if we have already extracted the mapping file from the jar
+				val extractedMappingFile = file.parentFile.resolve(file.nameWithoutExtension + ".tiny").notExists { extractedMappings ->
+					JarFile(file).use { jar -> jar.getInputStream(jar.getJarEntry("mappings/mappings.tiny"))
+						.use { input -> extractedMappings.writeBytes(input.readBytes()) } }
+				}
+				
+				TinyUtils.createTinyMappingProvider(extractedMappingFile.toPath(), "intermediary", "named")
+			}
+			
 			project.configurations.getByName("mappedImplementation").incoming.artifacts.artifacts.forEach { artifact ->
 				val file = artifact.file
-				var outputFile = loomPaths.mappedLibrariesDir
+				val outputFile = loomPaths.mappedLibrariesDir.let { outputFile ->
+					val moduleVersionId = artifact.id.componentIdentifier
+					if (moduleVersionId is ModuleComponentIdentifier) {
+						val group = moduleVersionId.group
+						val name = moduleVersionId.module
+						val version = moduleVersionId.version
 
-				val moduleVersionId = artifact.id.componentIdentifier
-				if (moduleVersionId is ModuleComponentIdentifier) {
-					val group = moduleVersionId.group
-					val name = moduleVersionId.module
-					val version = moduleVersionId.version
-
-					outputFile = outputFile.resolve("$group/$name/$version")
-				} else {
-					outputFile = outputFile.resolve(file.nameWithoutExtension)
-				}
-				outputFile = file.copyTo(outputFile.resolve(file.name), overwrite = true)
+						outputFile.resolve("$group/$name/$version")
+					} else {
+						outputFile.resolve(file.nameWithoutExtension)
+					}
+				}.let { file.copyTo(it.resolve(file.name), overwrite = true) }
 
 				project.logger.lifecycle("Remapping dependency: ${file.toURI()}")
-
 				try {
-					mappings.applyMappings("official", "named", file, outputFile)
+					for (provider in mappingProviders) {
+						val tinyRemapper = TinyRemapper.newRemapper()
+							.withMappings(provider)
+							.build()
+						tinyRemapper.readInputs(outputFile.toPath())
+
+						OutputConsumerPath.Builder(file.toPath()).build().use { outputConsumer ->
+							outputConsumer.addNonClassFiles(outputFile.toPath())
+							tinyRemapper.apply(outputConsumer)
+						}
+						tinyRemapper.finish()
+					}
+					
 					project.dependencies.add("implementation", project.files(outputFile))
 					project.logger.lifecycle("Successfully remapped: ${file.toURI()}")
 				} catch (e: Exception) {

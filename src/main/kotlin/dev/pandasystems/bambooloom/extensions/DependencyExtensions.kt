@@ -3,6 +3,10 @@ package dev.pandasystems.bambooloom.extensions
 import dev.pandasystems.bambooloom.BambooLoomPlugin
 import dev.pandasystems.bambooloom.utils.downloadFrom
 import dev.pandasystems.bambooloom.utils.notExists
+import net.fabricmc.mappingio.format.MappingFormat
+import net.fabricmc.tinyremapper.OutputConsumerPath
+import net.fabricmc.tinyremapper.TinyRemapper
+import net.fabricmc.tinyremapper.TinyUtils
 import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileCollection
 import java.io.File
@@ -15,12 +19,31 @@ fun Project.minecraft(version: String): ConfigurableFileCollection {
 	val plugin = BambooLoomPlugin.instances[project]!!
 	val meta = plugin.versionMetas[version] ?: throw IllegalArgumentException("Unknown version: $version")
 
-	val clientFile = plugin.loomPaths.libraryCacheDir.resolve("com.mojang.minecraft/minecraft-client-$version.jar").notExists { file ->
-		file.downloadFrom(meta.downloads.client.url)
+	// Download the intermediary mappings file
+	val intermediaryMappingFile = plugin.loomPaths.mappings.official2Intermediary(version).notExists { file ->
+		val jarFile = file.downloadFrom("https://maven.fabricmc.net/net/fabricmc/intermediary/$version/intermediary-$version-v2.jar")
+		val tinyBytes = JarFile(jarFile).use { it.getInputStream(it.getEntry("mapping/mapping.tiny")).readBytes() }
+		file.parentFile.resolve(file.nameWithoutExtension + ".tiny").also { it.writeBytes(tinyBytes) }
+	}.toPath()
+	val mappingProvider = TinyUtils.createTinyMappingProvider(intermediaryMappingFile, "official", "intermediary")
+	
+	// Download client jar
+	val clientFile = plugin.loomPaths.libraryCacheDir.resolve("com.mojang/minecraft/minecraft-client-$version-intermediary.jar").notExists { file ->
+		val officialFile = file.parentFile.resolve("minecraft-client-$version.jar")
+			.downloadFrom(meta.downloads.client.url)
+		
+		// Remap jar to intermediary
+		val tinyRemapper = TinyRemapper.newRemapper()
+			.withMappings(mappingProvider)
+			.build()
+		tinyRemapper.readInputs(officialFile.toPath())
+		
+		OutputConsumerPath.Builder(file.toPath()).build().use { outputConsumer ->
+			outputConsumer.addNonClassFiles(officialFile.toPath())
+			tinyRemapper.apply(outputConsumer)
+		}
+		tinyRemapper.finish()
 	}
-
-	// Add the intermediary mapping to the mapping's configuration.
-	project.dependencies.add("mapping", "net.fabricmc:intermediary:$version:v2")
 
 	return project.files(clientFile)
 }

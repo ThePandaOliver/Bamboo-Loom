@@ -8,6 +8,7 @@ group = "dev.pandasystems"
 version = "1.0-SNAPSHOT"
 
 repositories {
+	maven("https://maven.fabricmc.net/")
     mavenCentral()
 }
 
@@ -23,7 +24,10 @@ dependencies {
 	testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-	implementation(project(":remapper"))
+	implementation("net.fabricmc:tiny-remapper:0.11.1")
+	implementation("net.fabricmc:mapping-io:0.7.1")
+
+	implementation("org.jetbrains:annotations:24.1.0")
 }
 
 gradlePlugin {

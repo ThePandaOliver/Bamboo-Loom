@@ -16,6 +16,7 @@ class LoomPaths(private val project: Project) {
 	val mappedLibrariesDir = projectCacheDir.resolve("remapped-libraries")
 
 	val mappings = Mappings(this)
-	class Mappings(paths: LoomPaths) {
+	class Mappings(private val paths: LoomPaths) {
+		fun official2Intermediary(version: String) = paths.libraryCacheDir.resolve("net.fabricmc/intermediary/$version/intermediary-$version-v2.jar")
 	}
 }
