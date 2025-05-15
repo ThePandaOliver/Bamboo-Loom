@@ -21,23 +21,23 @@ fun Project.minecraft(version: String): ConfigurableFileCollection {
 
 	// Download the intermediary mappings file
 	val intermediaryMappingFile = plugin.loomPaths.mappings.official2Intermediary(version).notExists { file ->
-		val jarFile = file.downloadFrom("https://maven.fabricmc.net/net/fabricmc/intermediary/$version/intermediary-$version-v2.jar")
-		val tinyBytes = JarFile(jarFile).use { it.getInputStream(it.getEntry("mapping/mapping.tiny")).readBytes() }
-		file.parentFile.resolve(file.nameWithoutExtension + ".tiny").also { it.writeBytes(tinyBytes) }
+		val jarFile = file.parentFile.resolve(file.nameWithoutExtension + ".jar").downloadFrom("https://maven.fabricmc.net/net/fabricmc/intermediary/$version/intermediary-$version-v2.jar")
+		val tinyBytes = JarFile(jarFile).use { it.getInputStream(it.getEntry("mappings/mappings.tiny")).readBytes() }
+		file.outputStream().use { it.write(tinyBytes) }
 	}.toPath()
 	val mappingProvider = TinyUtils.createTinyMappingProvider(intermediaryMappingFile, "official", "intermediary")
-	
+
 	// Download client jar
 	val clientFile = plugin.loomPaths.libraryCacheDir.resolve("com.mojang/minecraft/minecraft-client-$version-intermediary.jar").notExists { file ->
 		val officialFile = file.parentFile.resolve("minecraft-client-$version.jar")
 			.downloadFrom(meta.downloads.client.url)
-		
+
 		// Remap jar to intermediary
 		val tinyRemapper = TinyRemapper.newRemapper()
 			.withMappings(mappingProvider)
 			.build()
 		tinyRemapper.readInputs(officialFile.toPath())
-		
+
 		OutputConsumerPath.Builder(file.toPath()).build().use { outputConsumer ->
 			outputConsumer.addNonClassFiles(officialFile.toPath())
 			tinyRemapper.apply(outputConsumer)

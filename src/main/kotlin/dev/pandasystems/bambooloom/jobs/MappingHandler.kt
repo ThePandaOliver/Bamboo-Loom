@@ -13,11 +13,13 @@ class MappingHandler(private val plugin: BambooLoomPlugin) {
 		val project = plugin.project
 		val loomPaths = plugin.loomPaths
 		try {
-			val mappingProviders = project.configurations.getByName("mappings").resolve().map { file ->
+			val mappingProviders = project.configurations.getByName("mapping").resolve().map { file ->
 				// Check if we have already extracted the mapping file from the jar
 				val extractedMappingFile = file.parentFile.resolve(file.nameWithoutExtension + ".tiny").notExists { extractedMappings ->
-					JarFile(file).use { jar -> jar.getInputStream(jar.getJarEntry("mappings/mappings.tiny"))
-						.use { input -> extractedMappings.writeBytes(input.readBytes()) } }
+					JarFile(file).use { jar -> 
+						val tinyBytes = jar.getInputStream(jar.getJarEntry("mappings/mappings.tiny")).readBytes()
+						extractedMappings.outputStream().use { it.write(tinyBytes) }
+					}
 				}
 				
 				TinyUtils.createTinyMappingProvider(extractedMappingFile.toPath(), "intermediary", "named")
@@ -36,7 +38,8 @@ class MappingHandler(private val plugin: BambooLoomPlugin) {
 					} else {
 						outputFile.resolve(file.nameWithoutExtension)
 					}
-				}.let { file.copyTo(it.resolve(file.name), overwrite = true) }
+				}.resolve(file.name)
+//					.let { file.copyTo(it.resolve(file.name), overwrite = true) }
 
 				project.logger.lifecycle("Remapping dependency: ${file.toURI()}")
 				try {
@@ -44,10 +47,10 @@ class MappingHandler(private val plugin: BambooLoomPlugin) {
 						val tinyRemapper = TinyRemapper.newRemapper()
 							.withMappings(provider)
 							.build()
-						tinyRemapper.readInputs(outputFile.toPath())
+						tinyRemapper.readInputs(file.toPath())
 
-						OutputConsumerPath.Builder(file.toPath()).build().use { outputConsumer ->
-							outputConsumer.addNonClassFiles(outputFile.toPath())
+						OutputConsumerPath.Builder(outputFile.toPath()).build().use { outputConsumer ->
+							outputConsumer.addNonClassFiles(file.toPath())
 							tinyRemapper.apply(outputConsumer)
 						}
 						tinyRemapper.finish()
