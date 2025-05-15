@@ -1,24 +1,27 @@
 package dev.pandasystems.bambooloom.jobs
 
 import dev.pandasystems.bambooloom.BambooLoomPlugin
-import dev.pandasystems.bambooloom.utils.notExists
+import dev.pandasystems.bambooloom.utils.LoomFiles
 import net.fabricmc.tinyremapper.OutputConsumerPath
 import net.fabricmc.tinyremapper.TinyRemapper
 import net.fabricmc.tinyremapper.TinyUtils
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.kotlin.dsl.getByType
 import java.util.jar.JarFile
 
 class MappingHandler(private val plugin: BambooLoomPlugin) {
 	init {
 		val project = plugin.project
-		val loomPaths = plugin.loomPaths
+		val loomFiles = plugin.project.extensions.getByType<LoomFiles>()
+		
 		try {
 			val mappingProviders = project.configurations.getByName("mapping").resolve().map { file ->
-				// Check if we have already extracted the mapping file from the jar
-				val extractedMappingFile = file.parentFile.resolve(file.nameWithoutExtension + ".tiny").notExists { extractedMappings ->
-					JarFile(file).use { jar -> 
+				val extractedMappingFile = file.parentFile.resolve(file.nameWithoutExtension + ".tiny").also { mappingsFile ->
+					if (mappingsFile.exists()) return@also
+					// Extract mappings file if it doesn't exist
+					JarFile(file).use { jar ->
 						val tinyBytes = jar.getInputStream(jar.getJarEntry("mappings/mappings.tiny")).readBytes()
-						extractedMappings.outputStream().use { it.write(tinyBytes) }
+						mappingsFile.writeBytes(tinyBytes)
 					}
 				}
 				
@@ -27,7 +30,9 @@ class MappingHandler(private val plugin: BambooLoomPlugin) {
 			
 			project.configurations.getByName("mappedImplementation").incoming.artifacts.artifacts.forEach { artifact ->
 				val file = artifact.file
-				val outputFile = loomPaths.mappedLibrariesDir.let { outputFile ->
+				
+				// Get the output file
+				val outputFile = loomFiles.mappedLibrariesDir.let { outputFile ->
 					val moduleVersionId = artifact.id.componentIdentifier
 					if (moduleVersionId is ModuleComponentIdentifier) {
 						val group = moduleVersionId.group
@@ -43,6 +48,7 @@ class MappingHandler(private val plugin: BambooLoomPlugin) {
 				project.logger.lifecycle("Remapping dependency: ${file.toURI()}")
 				try {
 					for (provider in mappingProviders) {
+						// Remap jar to "named"
 						val tinyRemapper = TinyRemapper.newRemapper()
 							.withMappings(provider)
 							.build()

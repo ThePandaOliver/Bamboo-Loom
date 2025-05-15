@@ -1,3 +1,5 @@
+import dev.pandasystems.bambooloom.extensions.minecraft
+
 plugins {
 	id("java")
 	id("dev.pandasystems.bamboo-loom")
@@ -11,10 +13,6 @@ repositories {
 }
 
 dependencies {
-	testImplementation(platform("org.junit:junit-bom:5.10.0"))
-	testImplementation("org.junit.jupiter:junit-jupiter")
-}
-
-tasks.test {
-	useJUnitPlatform()
+	mappedImplementation(minecraft("1.21.5"))
+	mapping("net.fabricmc:yarn:1.21.5+build.1:v2")
 }
