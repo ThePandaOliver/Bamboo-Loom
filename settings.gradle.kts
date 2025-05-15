@@ -10,4 +10,3 @@ plugins {
 }
 
 rootProject.name = "bamboo-loom"
-include("remapper")
