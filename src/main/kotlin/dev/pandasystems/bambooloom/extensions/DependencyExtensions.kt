@@ -3,7 +3,6 @@ package dev.pandasystems.bambooloom.extensions
 import dev.pandasystems.bambooloom.BambooLoomPlugin
 import dev.pandasystems.bambooloom.utils.LoomFiles
 import dev.pandasystems.bambooloom.utils.downloadFrom
-import dev.pandasystems.bambooloom.utils.notExists
 import net.fabricmc.tinyremapper.OutputConsumerPath
 import net.fabricmc.tinyremapper.TinyRemapper
 import net.fabricmc.tinyremapper.TinyUtils

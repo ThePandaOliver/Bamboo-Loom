@@ -28,11 +28,11 @@ open class LoomFiles(private val project: Project) {
 		requireNotNull(BambooLoomPlugin.gson.fromJson(versionManifestFile.readText(), VersionManifest::class.java)) { "Failed to parse version manifest" }
 	}
 	val versionMetaFiles = LazyMap<String, File> { version ->
-		val version = versionManifestFile.readText().let { BambooLoomPlugin.gson.fromJson(it, VersionManifest::class.java) }
+		val meta = versionManifestFile.readText().let { BambooLoomPlugin.gson.fromJson(it, VersionManifest::class.java) }
 			.versions.find { it.id == version } ?: return@LazyMap null
 		cacheDir.resolve("versions/${version}_meta.json").apply {
 			if (!exists()) {
-				downloadFrom(version.url)
+				downloadFrom(meta.url)
 			}
 		}
 	}
