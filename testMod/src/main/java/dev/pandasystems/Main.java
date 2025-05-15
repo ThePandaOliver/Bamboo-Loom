@@ -1,0 +1,6 @@
+package dev.pandasystems;
+
+public class Main {
+	public static void main(String[] args) {
+	}
+}
