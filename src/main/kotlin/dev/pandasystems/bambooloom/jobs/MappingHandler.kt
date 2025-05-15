@@ -39,7 +39,6 @@ class MappingHandler(private val plugin: BambooLoomPlugin) {
 						outputFile.resolve(file.nameWithoutExtension)
 					}
 				}.resolve(file.name)
-//					.let { file.copyTo(it.resolve(file.name), overwrite = true) }
 
 				project.logger.lifecycle("Remapping dependency: ${file.toURI()}")
 				try {
