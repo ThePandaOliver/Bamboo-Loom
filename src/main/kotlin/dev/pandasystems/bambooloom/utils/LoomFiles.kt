@@ -7,7 +7,7 @@ import org.gradle.api.Project
 import java.io.File
 import kotlin.jvm.java
 
-open class LoomFiles(private val project: Project) {
+class LoomFiles(private val project: Project) {
 	// Gradle
 	val projectGradleDir = project.rootDir.resolve(".gradle")
 	val gradleDir = project.gradle.gradleUserHomeDir
@@ -41,8 +41,8 @@ open class LoomFiles(private val project: Project) {
 	}
 	
 	// Library
-	val libraryCacheDir = cacheDir.resolve("libraries")
-	fun libraryFile(group: String, name: String, version: String, fileName: String = "$name-$version.jar") = libraryCacheDir.resolve("$group/$name/$version/$fileName")
+	val libraryRepoDir = cacheDir.resolve("libraries")
+	fun libraryFile(group: String, name: String, version: String, fileName: String = "$name-$version.jar") = libraryRepoDir.resolve("$group/$name/$version/$fileName")
 	val mappedLibrariesDir = projectCacheDir.resolve("remapped-libraries")
 	fun mappedLibraryFile(group: String, name: String, version: String, fileName: String = "$name-$version.jar") = mappedLibrariesDir.resolve("$group/$name/$version/$fileName")
 

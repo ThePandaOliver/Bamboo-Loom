@@ -3,7 +3,8 @@ package dev.pandasystems.bambooloom.data
 import com.google.gson.annotations.SerializedName
 
 data class VersionMeta(
-	val downloads: Downloads
+	val downloads: Downloads,
+	val libraries: List<Library>
 ) {
 	data class Downloads(
 		val client: Download,
@@ -18,5 +19,9 @@ data class VersionMeta(
 		val sha1: String,
 		val size: Int,
 		val url: String
+	)
+	
+	data class Library(
+		val name: String
 	)
 }
