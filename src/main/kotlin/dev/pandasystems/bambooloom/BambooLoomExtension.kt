@@ -4,7 +4,7 @@ import dev.pandasystems.bambooloom.utils.LoomFiles
 import org.gradle.api.Project
 
 open class BambooLoomExtension(val project: Project) {
-	open lateinit var minecraftVersion: String
+	open var minecraftVersion: String = "1.21.5"
 	
 
 	val files = LoomFiles(project)
